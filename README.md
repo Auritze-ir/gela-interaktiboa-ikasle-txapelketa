@@ -1,0 +1,1 @@
+# gela-interaktiboa-ikasle-txapelketa
