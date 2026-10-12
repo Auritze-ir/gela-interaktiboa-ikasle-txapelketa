@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="eu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ezagutu Don Bosco · Conoce Don Bosco · Discover Don Bosco</title>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --navy: #1a3a5c; --orange: #f5a623; --paper: #fff; --bg: #f2f5f8; --ink: #14243a; --muted: #6b7280;
+          --ok: #16a34a; --bad: #dc2626; --team: #5b3cc4; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { font-family: 'Lexend', system-ui, sans-serif; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; overflow: hidden; user-select: none; -webkit-user-select: none; }
+  button { font-family: inherit; cursor: pointer; }
+  button:focus-visible { outline: 4px solid var(--orange); outline-offset: 3px; }
+  .hidden { display: none !important; }
+
+  .bar { height: 76px; flex: none; background: var(--navy); color: #fff; display: flex; align-items: center; gap: 18px; padding: 0 22px; border-bottom: 5px solid var(--orange); }
+  .bar h1 { font-size: 1.4rem; font-weight: 800; white-space: nowrap; }
+  .team { background: var(--team); padding: 7px 16px; border-radius: 999px; font-weight: 800; white-space: nowrap; }
+  .spacer { flex: 1; }
+  .prog { font-weight: 600; opacity: 0.85; white-space: nowrap; }
+  .track { height: 8px; background: #d9e1ea; flex: none; }
+  .track div { height: 100%; width: 0; background: var(--orange); transition: width 0.4s; }
+
+  main { flex: 1; min-height: 0; display: grid; grid-template-columns: 40% 1fr; gap: 2vw; padding: 2.4vh 2vw; }
+  .pic { border-radius: 22px; overflow: hidden; background: #dfe6ee url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='62' font-size='40' text-anchor='middle'%3E%F0%9F%8F%AB%3C/text%3E%3C/svg%3E") center / 30% no-repeat; position: relative; }
+  .pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pic .cat { position: absolute; left: 16px; top: 16px; background: var(--navy); color: #fff; padding: 8px 16px; border-radius: 999px; font-weight: 600; }
+  .qa { display: flex; flex-direction: column; gap: 2vh; min-height: 0; }
+  .q { background: var(--paper); border-radius: 22px; padding: 2.6vh 2vw; font-size: clamp(1.3rem, 2.3vw, 2.4rem); font-weight: 800; line-height: 1.2; border-left: 12px solid var(--orange); min-height: 20vh; display: flex; align-items: center; }
+  .opts { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 1.6vh 1vw; min-height: 0; }
+  .opt { border: 3px solid transparent; background: var(--paper); border-radius: 18px; padding: 1.4vh 1.2vw; font-size: clamp(1rem, 1.6vw, 1.7rem); font-weight: 600; text-align: left; display: flex; align-items: center; gap: 0.9vw; color: var(--ink); box-shadow: 0 5px 0 rgba(20,36,58,0.12); }
+  .opt .k { flex: none; width: 2.3em; height: 2.3em; border-radius: 12px; background: var(--navy); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 0.85em; }
+  .opt.ok { background: var(--ok); color: #fff; } .opt.bad { background: var(--bad); color: #fff; }
+  .opt.ok .k, .opt.bad .k { background: rgba(255,255,255,0.25); }
+  .opt.dim { opacity: 0.4; }
+  .fb { background: var(--paper); border-radius: 16px; padding: 1.6vh 1.4vw; font-size: clamp(0.95rem, 1.25vw, 1.25rem); line-height: 1.4; border-left: 8px solid var(--ok); }
+  .fb.bad { border-left-color: var(--bad); }
+  .fb b { margin-right: 6px; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(20,36,58,0.86); display: grid; place-items: center; padding: 20px; z-index: 10; }
+  .panel { background: var(--paper); border-radius: 26px; padding: 36px 42px; width: min(760px, 100%); max-height: calc(100vh - 40px); overflow: auto; border-top: 14px solid var(--orange); }
+  .panel h2 { font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+  .panel .lead { font-size: 1.15rem; line-height: 1.5; margin: 16px 0 4px; }
+  .panel .who { font-weight: 800; margin-top: 20px; font-size: 1.1rem; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 22px 0 8px; }
+  .st { background: var(--bg); border-radius: 16px; padding: 14px; }
+  .st span { display: block; color: var(--muted); font-size: 0.9rem; font-weight: 600; }
+  .st b { font-size: 1.9rem; }
+  .st.total { background: var(--navy); color: #fff; } .st.total span { color: #c8d6e6; }
+  .st.pts { background: var(--orange); color: #fff; } .st.pts span { color: #fff3dc; }
+  .saved { color: var(--ok); font-weight: 600; margin-top: 6px; }
+  .btns { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+  .btn { border: none; border-radius: 999px; background: var(--navy); color: #fff; font-weight: 800; font-size: 1.15rem; padding: 14px 30px; text-decoration: none; }
+  .btn.light { background: #e3e8ef; color: var(--ink); }
+
+  @media (max-width: 800px) {
+    body { overflow: auto; }
+    main { grid-template-columns: 1fr; } .pic { height: 30vh; }
+    .opts { grid-template-columns: 1fr; } .stats { grid-template-columns: 1fr 1fr; }
+    .bar h1, .prog { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <h1 id="title"></h1>
+  <span class="team" id="teamChip"></span>
+  <span class="spacer"></span>
+  <span class="prog" id="prog"></span>
+</header>
+<div class="track"><div id="track"></div></div>
+
+<main>
+  <div class="pic"><img id="img" alt=""><span class="cat" id="cat"></span></div>
+  <div class="qa">
+    <div class="q" id="q"></div>
+    <div class="opts" id="opts"></div>
+    <div class="fb hidden" id="fb"></div>
+  </div>
+</main>
+
+<div class="overlay" id="start">
+  <div class="panel">
+    <h2 id="sTitle"></h2>
+    <p class="lead" id="sLead"></p>
+    <div id="teams"></div>
+    <div class="btns"><a class="btn light" id="sHub" href="../index.html"></a></div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="end">
+  <div class="panel">
+    <h2 id="eTitle"></h2>
+    <div class="stats">
+      <div class="st total"><span id="lOk"></span><b id="vOk"></b></div>
+      <div class="st"><span id="lWrong"></span><b id="vWrong"></b></div>
+      <div class="st pts"><span id="lPts"></span><b id="vPts"></b></div>
+    </div>
+    <p class="saved" id="saved"></p>
+    <div class="btns">
+      <button class="btn" id="other"></button>
+      <a class="btn light" id="eHub" href="../index.html"></a>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/common.js"></script>
+<script src="questions.js"></script>
+<script>
+const L = {
+  title: { eu: '🏫 Ezagutu Don Bosco', es: '🏫 Conoce Don Bosco', en: '🏫 Discover Don Bosco' },
+  lead: { eu: `${QUESTIONS.length} galdera ikastetxeari buruz. Ez dago erlojurik: lasai pentsatu eta ukitu erantzuna. Galdera bakoitzean aukera bakarra duzue; zenbat eta asmatze gehiago, orduan eta puntu gehiago.`,
+          es: `${QUESTIONS.length} preguntas sobre el centro. No hay reloj: pensad con calma y tocad la respuesta. Tenéis un solo intento por pregunta; cuantos más aciertos, más puntos.`,
+          en: `${QUESTIONS.length} questions about the school. There is no clock: think calmly and tap your answer. You get one try per question; the more you get right, the more points you score.` },
+  q: { eu: 'Galdera', es: 'Pregunta', en: 'Question' },
+  right: { eu: 'Zuzena!', es: '¡Correcto!', en: 'Correct!' },
+  wrongT: { eu: 'Ez da hori.', es: 'No es esa.', en: 'Not that one.' },
+  end: { eu: 'Amaituta!', es: '¡Terminado!', en: 'Finished!' }
+};
+const t = o => DB.t(o);
+let team = '', group = '', idx = 0, wrong = 0, correct = 0, locked = false;
+
+function applyTexts() {
+  document.documentElement.lang = DB.lang;
+  document.getElementById('title').textContent = t(L.title);
+  document.getElementById('sTitle').textContent = t(L.title);
+  document.getElementById('sLead').textContent = t(L.lead);
+  document.getElementById('sHub').textContent = t(DB.S.back);
+  document.getElementById('eHub').textContent = t(DB.S.toHub);
+  document.getElementById('other').textContent = t(DB.S.otherTeam);
+  document.getElementById('lOk').textContent = t(DB.S.correct);
+  document.getElementById('lWrong').textContent = t(DB.S.wrong);
+  document.getElementById('lPts').textContent = t(DB.S.points);
+  DB.nameForm(document.getElementById('teams'), { count: 1 }, (n, gr) => start(n[0], gr[0]));
+}
+
+function start(id, grp) {
+  team = id; group = grp || ''; idx = 0; wrong = 0; correct = 0;
+  const chip = document.getElementById('teamChip');
+  chip.textContent = id;
+  chip.style.background = DB.COLORS.L;
+  document.getElementById('start').classList.add('hidden');
+  document.getElementById('end').classList.add('hidden');
+  render();
+}
+
+function render() {
+  const Q = QUESTIONS[idx], lang = DB.lang;
+  locked = false;
+  document.getElementById('prog').textContent = `${t(L.q)} ${idx + 1} / ${QUESTIONS.length}`;
+  document.getElementById('track').style.width = (idx / QUESTIONS.length * 100) + '%';
+  document.getElementById('cat').textContent = Q.cat[lang];
+  document.getElementById('q').textContent = Q.q[lang];
+  const img = document.getElementById('img');
+  const id = IMAGES[Q.img];
+  img.src = id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1000` : '';
+  img.style.visibility = id ? 'visible' : 'hidden';
+  img.onerror = () => { img.style.visibility = 'hidden'; };
+  const box = document.getElementById('opts');
+  box.innerHTML = '';
+  Q.opts[lang].forEach((txt, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.innerHTML = `<span class="k">${'ABCD'[i]}</span><span></span>`;
+    b.lastChild.textContent = txt;
+    b.onclick = () => pick(i, b);
+    box.appendChild(b);
+  });
+  document.getElementById('fb').classList.add('hidden');
+}
+
+function pick(i, btn) {
+  if (locked) return;
+  locked = true;
+  const Q = QUESTIONS[idx];
+  const all = [...document.querySelectorAll('.opt')];
+  all.forEach((b, k) => { if (k !== i && k !== Q.ok) b.classList.add('dim'); });
+  const fb = document.getElementById('fb');
+  fb.innerHTML = '<b></b><span></span>';
+  fb.querySelector('span').textContent = Q.fb[DB.lang];
+  if (i === Q.ok) {
+    correct++;
+    btn.classList.add('ok');
+    fb.className = 'fb';
+    fb.querySelector('b').textContent = '✔ ' + t(L.right);
+  } else {
+    wrong++;
+    btn.classList.add('bad');
+    all[Q.ok].classList.add('ok');
+    fb.className = 'fb bad';
+    fb.querySelector('b').textContent = '✖ ' + t(L.wrongT);
+  }
+  setTimeout(next, i === Q.ok ? 1800 : 3400);
+}
+
+function next() {
+  idx++;
+  if (idx >= QUESTIONS.length) return finish();
+  render();
+}
+
+function finish() {
+  document.getElementById('track').style.width = '100%';
+  document.getElementById('eTitle').textContent = t(L.end) + ' — ' + team;
+  document.getElementById('vOk').textContent = correct + ' / ' + QUESTIONS.length;
+  document.getElementById('vWrong').textContent = wrong;
+  const rec = { game: 'ezagutu', teamName: team, group, wrong, correct };
+  const where = DB.saveResult(rec);
+  document.getElementById('vPts').textContent = '+' + rec.points;
+  document.getElementById('saved').textContent = t(where === 'sheet' ? DB.S.saved : DB.S.savedLocal);
+  document.getElementById('end').classList.remove('hidden');
+}
+
+document.getElementById('other').onclick = () => {   // next team: type its name
+  document.getElementById('end').classList.add('hidden');
+  document.getElementById('start').classList.remove('hidden');
+  DB.nameForm(document.getElementById('teams'), { count: 1 }, (n, gr) => start(n[0], gr[0]));
+};
+applyTexts();
+</script>
+</body>
+</html>

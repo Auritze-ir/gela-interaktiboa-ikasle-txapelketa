@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="eu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STEAM erronka · Reto STEAM · STEAM challenge</title>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #10213a; --paper: #fff; --bg: #e9f1f7; --muted: #64748b; --brand: #0b7fb3;
+          --ok: #16a34a; --bad: #dc2626; --c: #0b7fb3; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { font-family: 'Lexend', system-ui, sans-serif; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  button { font-family: inherit; cursor: pointer; }
+  button:focus-visible { outline: 4px solid #ffc20e; outline-offset: 3px; }
+  .hidden { display: none !important; }
+
+  .bar { height: 74px; flex: none; background: var(--ink); color: #fff; display: flex; align-items: center; gap: 18px; padding: 0 22px; }
+  .bar h1 { font-size: 1.35rem; font-weight: 800; white-space: nowrap; }
+  .team { padding: 7px 16px; border-radius: 999px; font-weight: 800; white-space: nowrap; }
+  .dots { display: flex; gap: 8px; }
+  .dot { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); }
+  .dot.on { background: var(--dc); color: #fff; box-shadow: 0 0 0 3px #fff inset; }
+  .dot.done { background: var(--dc); color: #fff; opacity: 0.55; }
+  .spacer { flex: 1; }
+  .pen { color: #ffb4b4; font-weight: 800; font-size: 1.1rem; min-width: 70px; text-align: right; }
+  .clock { font-size: 2.1rem; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 100px; text-align: right; }
+
+  main { flex: 1; min-height: 0; display: grid; grid-template-columns: 30% 1fr; gap: 2vw; padding: 2.4vh 2vw; }
+  .info { background: var(--c); color: #fff; border-radius: 26px; padding: 3vh 2vw; display: flex; flex-direction: column; gap: 2vh; }
+  .letter { width: 13vh; height: 13vh; border-radius: 22px; background: rgba(255,255,255,0.18); display: grid; place-items: center; font-size: 8vh; font-weight: 800; line-height: 1; }
+  .area-name { font-size: clamp(1rem, 1.4vw, 1.4rem); font-weight: 600; opacity: 0.9; }
+  .info h2 { font-size: clamp(1.5rem, 2.6vw, 2.6rem); line-height: 1.05; font-weight: 800; }
+  .info p { font-size: clamp(1rem, 1.45vw, 1.5rem); line-height: 1.4; }
+  .info .tip { margin-top: auto; background: rgba(0,0,0,0.18); border-radius: 14px; padding: 12px 14px; font-size: clamp(0.85rem, 1.05vw, 1.05rem); line-height: 1.4; }
+  .stage { background: var(--paper); border-radius: 26px; padding: 2.4vh 2vw; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2vh; position: relative; min-height: 0; }
+  .stage.shake { animation: shake 0.45s; }
+  @keyframes shake { 0%,100% { transform: none; } 20% { transform: translateX(-14px); } 40% { transform: translateX(12px); } 60% { transform: translateX(-8px); } 80% { transform: translateX(6px); } }
+  .flash { position: absolute; inset: 0; border-radius: 26px; display: grid; place-items: center; font-size: 7rem; background: rgba(22,163,74,0.92); color: #fff; font-weight: 800; z-index: 3; }
+  .msg { font-weight: 800; font-size: 1.3rem; min-height: 1.6em; color: var(--bad); text-align: center; }
+  .big { border: none; border-radius: 999px; background: var(--c); color: #fff; font-weight: 800; font-size: clamp(1.1rem, 1.6vw, 1.6rem); padding: 1.4vh 3vw; }
+  .big.light { background: #e2e8f0; color: var(--ink); }
+
+  /* S: planets */
+  .orbit { display: flex; align-items: center; gap: 1vw; width: 100%; justify-content: center; }
+  .sun { width: 10vh; height: 10vh; border-radius: 50%; background: radial-gradient(#ffe36e, #f59e0b); box-shadow: 0 0 30px #fbbf24; flex: none; }
+  .slot { width: 9vh; height: 9vh; border-radius: 50%; border: 3px dashed #cbd5e1; display: grid; place-items: center; color: #94a3b8; font-weight: 800; flex: none; }
+  .slot.f { border: none; color: transparent; }
+  .slot i { display: block; border-radius: 50%; position: relative; }
+  .pool { display: flex; flex-wrap: wrap; gap: 2vh 2vw; justify-content: center; align-items: flex-end; }
+  .planet { border: none; background: none; display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--ink); font-weight: 800; font-size: clamp(0.95rem, 1.3vw, 1.3rem); }
+  .planet i { display: block; border-radius: 50%; position: relative; }
+  .planet.ring i::after { content: ''; position: absolute; left: -22%; right: -22%; top: 42%; height: 16%; border-radius: 50%; border: 4px solid #b9975b; transform: rotate(-12deg); }
+
+  /* T: logic */
+  .svgbox { width: 100%; flex: 1; min-height: 0; }
+  .svgbox svg { width: 100%; height: 100%; display: block; }
+  .sw { cursor: pointer; }
+
+  /* A: colours */
+  .mix { display: flex; align-items: center; gap: 4vw; }
+  .target { display: flex; flex-direction: column; align-items: center; gap: 10px; font-weight: 800; }
+  .target i { width: 16vh; height: 16vh; border-radius: 50%; border: 5px solid var(--ink); display: block; }
+  .lights { display: flex; gap: 1.4vw; }
+  .lt { border: 5px solid transparent; border-radius: 18px; padding: 1.4vh 1.6vw; font-weight: 800; font-size: clamp(1rem, 1.4vw, 1.4rem); color: #fff; opacity: 0.45; }
+  .lt.on { opacity: 1; border-color: var(--ink); }
+
+  /* M: keypad */
+  .clues { display: flex; gap: 1.4vw; flex-wrap: wrap; justify-content: center; }
+  .clue { background: var(--bg); border-radius: 16px; padding: 1.4vh 1.4vw; font-size: clamp(1rem, 1.5vw, 1.6rem); font-weight: 800; text-align: center; }
+  .clue small { display: block; font-size: 0.65em; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  .digits { display: flex; gap: 1vw; }
+  .digits span { width: 8vh; height: 10vh; border-radius: 14px; background: var(--ink); color: #7cf3c2; display: grid; place-items: center; font-size: 6vh; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .keys { display: grid; grid-template-columns: repeat(6, 9vh); gap: 1vh; }
+  .key { border: none; height: 8vh; border-radius: 14px; background: #e2e8f0; font-weight: 800; font-size: 3.4vh; color: var(--ink); }
+  .key.go { background: var(--c); color: #fff; }
+
+  /* Robot */
+  .robo { display: flex; gap: 2vw; align-items: center; width: 100%; justify-content: center; }
+  .grid { display: grid; grid-template-columns: repeat(6, 9.5vh); grid-template-rows: repeat(4, 9.5vh); gap: 6px; background: #cbd5e1; padding: 6px; border-radius: 16px; position: relative; }
+  .cell { background: #f8fafc; border-radius: 10px; display: grid; place-items: center; font-size: 5vh; }
+  .bot { position: absolute; width: 9.5vh; height: 9.5vh; display: grid; place-items: center; font-size: 6vh; transition: left 0.3s, top 0.3s; }
+  .cmds { display: flex; flex-direction: column; gap: 1.2vh; align-items: center; }
+  .pad { display: grid; grid-template-columns: repeat(3, 9vh); grid-template-rows: repeat(2, 9vh); gap: 8px; }
+  .arrow { border: none; border-radius: 14px; background: var(--c); color: #fff; font-size: 4.5vh; font-weight: 800; }
+  .prog { display: flex; flex-wrap: wrap; gap: 6px; min-height: 6vh; max-width: 46vw; justify-content: center; background: var(--bg); border-radius: 14px; padding: 8px; }
+  .prog span { width: 5vh; height: 5vh; border-radius: 10px; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 3vh; }
+  .prog span.run { background: #f59e0b; }
+
+  /* overlays */
+  .overlay { position: fixed; inset: 0; background: rgba(16,33,58,0.88); display: grid; place-items: center; padding: 20px; z-index: 10; }
+  .panel { background: var(--paper); border-radius: 26px; padding: 36px 42px; width: min(780px, 100%); max-height: calc(100vh - 40px); overflow: auto; border-top: 14px solid var(--brand); }
+  .panel h2 { font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 800; line-height: 1; }
+  .panel .lead { font-size: 1.15rem; line-height: 1.5; margin-top: 14px; }
+  .panel .who { font-weight: 800; margin-top: 18px; font-size: 1.1rem; }
+  .letters { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .letters span { padding: 8px 14px; border-radius: 12px; color: #fff; font-weight: 800; }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 22px 0 6px; }
+  .st { background: var(--bg); border-radius: 16px; padding: 14px; }
+  .st span { display: block; color: var(--muted); font-size: 0.9rem; font-weight: 600; }
+  .st b { font-size: 1.9rem; }
+  .st.total { background: var(--ink); color: #fff; } .st.total span { color: #b6c6dc; }
+  .st.pts { background: var(--brand); color: #fff; } .st.pts span { color: #d6efff; }
+  .saved { color: var(--ok); font-weight: 600; margin-top: 6px; }
+  .btns { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+  .btn { border: none; border-radius: 999px; background: var(--ink); color: #fff; font-weight: 800; font-size: 1.15rem; padding: 14px 30px; text-decoration: none; }
+  .btn.light { background: #e2e8f0; color: var(--ink); }
+
+  @media (max-width: 900px) {
+    body { overflow: auto; } main { grid-template-columns: 1fr; } .bar h1, .dots { display: none; }
+    .stats { grid-template-columns: 1fr 1fr; } .robo, .mix { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <h1 id="title"></h1>
+  <span class="team" id="teamChip"></span>
+  <div class="dots" id="dots"></div>
+  <span class="spacer"></span>
+  <span class="pen" id="pen"></span>
+  <span class="clock" id="clock">0:00</span>
+</header>
+
+<main>
+  <aside class="info" id="info">
+    <div class="letter" id="letter"></div>
+    <div class="area-name" id="area"></div>
+    <h2 id="sTitleSt"></h2>
+    <p id="sText"></p>
+    <div class="tip" id="sTip"></div>
+  </aside>
+  <section class="stage" id="stage"></section>
+</main>
+
+<div class="overlay" id="start">
+  <div class="panel">
+    <h2 id="oTitle"></h2>
+    <p class="lead" id="oLead"></p>
+    <div class="letters" id="oLetters"></div>
+    <div id="teams"></div>
+    <div class="btns"><a class="btn light" id="oHub" href="../index.html"></a></div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="end">
+  <div class="panel">
+    <h2 id="eTitle"></h2>
+    <div class="stats">
+      <div class="st"><span id="lTime"></span><b id="vTime"></b></div>
+      <div class="st"><span id="lWrong"></span><b id="vWrong"></b></div>
+      <div class="st"><span id="lPen"></span><b id="vPen"></b></div>
+      <div class="st total"><span id="lTotal"></span><b id="vTotal"></b></div>
+      <div class="st pts"><span id="lPts"></span><b id="vPts"></b></div>
+    </div>
+    <p class="saved" id="saved"></p>
+    <div class="btns"><button class="btn" id="other"></button><a class="btn light" id="eHub" href="../index.html"></a></div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/common.js"></script>
+<script>
+const PEN = 10;
+const t = o => DB.t(o);
+const L = {
+  title: { eu: '🔬 STEAM erronka', es: '🔬 Reto STEAM', en: '🔬 STEAM challenge' },
+  lead: { eu: 'Sei erronka jarraian: zientzia, teknologia, ingeniaritza, artea, matematika eta robotika. Taldean pentsatu! Erantzun oker bakoitzak 10 segundo gehitzen ditu. Denbora gutxien behar duen taldeak irabazten du.',
+          es: 'Seis retos seguidos: ciencia, tecnología, ingeniería, arte, matemáticas y robótica. ¡Pensad en equipo! Cada respuesta incorrecta suma 10 segundos. Gana el equipo que menos tiempo necesite.',
+          en: 'Six challenges in a row: science, technology, engineering, art, maths and robotics. Think as a team! Every wrong answer adds 10 seconds. The team with the lowest time wins.' },
+  tip: { eu: 'Huts egiteak +10 s', es: 'Cada fallo: +10 s', en: 'Each mistake: +10 s' },
+  check: { eu: 'Egiaztatu', es: 'Comprobar', en: 'Check' },
+  end: { eu: 'Erronka gaindituta!', es: '¡Reto superado!', en: 'Challenge complete!' },
+  wrongMsg: { eu: '✖ Ez da zuzena (+10 s)', es: '✖ No es correcto (+10 s)', en: '✖ Not right (+10 s)' }
+};
+
+// ============================================================
+//  STATIONS
+// ============================================================
+const PLANETS = [
+  { n: { eu: 'Merkurio', es: 'Mercurio', en: 'Mercury' }, c: '#b1a79b', s: 0.55 },
+  { n: { eu: 'Artizarra', es: 'Venus', en: 'Venus' }, c: '#e8c27a', s: 0.75 },
+  { n: { eu: 'Lurra', es: 'Tierra', en: 'Earth' }, c: '#3d86d6', s: 0.78 },
+  { n: { eu: 'Marte', es: 'Marte', en: 'Mars' }, c: '#d1603d', s: 0.62 },
+  { n: { eu: 'Jupiter', es: 'Júpiter', en: 'Jupiter' }, c: '#d9a066', s: 1.25 },
+  { n: { eu: 'Saturno', es: 'Saturno', en: 'Saturn' }, c: '#e3c98d', s: 1.05, ring: true },
+  { n: { eu: 'Urano', es: 'Urano', en: 'Uranus' }, c: '#8fd3e0', s: 0.9 },
+  { n: { eu: 'Neptuno', es: 'Neptuno', en: 'Neptune' }, c: '#4466d6', s: 0.88 }
+];
+const GATE = { AND: { eu: 'ETA', es: 'Y', en: 'AND' }, OR: { eu: 'EDO', es: 'O', en: 'OR' }, NOT: { eu: 'EZ', es: 'NO', en: 'NOT' } };
+
+const STATIONS = [
+  { k: 'S', color: '#16a34a', area: { eu: 'Zientzia', es: 'Ciencia', en: 'Science' },
+    title: { eu: 'Eguzki-sistema', es: 'El sistema solar', en: 'The solar system' },
+    text: { eu: 'Ukitu planetak ordenan: Eguzkitik hurbilen dagoenetik urrunenera.', es: 'Tocad los planetas en orden: del más cercano al Sol al más lejano.', en: 'Touch the planets in order: from the closest to the Sun to the farthest.' },
+    mount: mountPlanets },
+  { k: 'T', color: '#0b7fb3', area: { eu: 'Teknologia', es: 'Tecnología', en: 'Technology' },
+    title: { eu: 'Ate logikoak', es: 'Puertas lógicas', en: 'Logic gates' },
+    text: { eu: 'Piztu A, B eta C etengailuak bonbilla piztu dadin, baina alarmak itzalita jarraitu behar du. Pentsatu eta egiaztatu!', es: 'Activad los interruptores A, B y C para que se encienda la bombilla, pero la alarma debe seguir apagada. ¡Pensad y comprobad!', en: 'Switch A, B and C so the bulb lights up, but the alarm must stay off. Think, then check!' },
+    tip: { eu: 'ETA: bi sarrerak 1 badira → 1 · EDO: bat 1 bada → 1 · EZ: alderantzizkoa', es: 'Y: si las dos entradas son 1 → 1 · O: si una es 1 → 1 · NO: lo contrario', en: 'AND: both inputs 1 → 1 · OR: any input 1 → 1 · NOT: the opposite' },
+    mount: mountLogic },
+  { k: 'E', color: '#ea580c', area: { eu: 'Ingeniaritza', es: 'Ingeniería', en: 'Engineering' },
+    title: { eu: 'Palanka orekatu', es: 'Equilibra la palanca', en: 'Balance the lever' },
+    text: { eu: 'Non jarri behar da pisua palanka orekatuta gera dadin? Bi aldiz egin behar duzue.', es: '¿Dónde hay que poner la pesa para que la palanca quede equilibrada? Hay que hacerlo dos veces.', en: 'Where must the weight go so the lever balances? You have to do it twice.' },
+    tip: { eu: 'Pisua × distantzia berdina izan behar da bi aldeetan.', es: 'Peso × distancia debe ser igual en los dos lados.', en: 'Weight × distance must be equal on both sides.' },
+    mount: mountLever },
+  { k: 'A', color: '#db2777', area: { eu: 'Artea', es: 'Arte', en: 'Art' },
+    title: { eu: 'Argiaren koloreak', es: 'Los colores de la luz', en: 'Colours of light' },
+    text: { eu: 'Piztu foku gorria, berdea edo urdina (RGB) eta lortu helburuko kolorea. Hiru kolore lortu behar dituzue.', es: 'Encended los focos rojo, verde o azul (RGB) y conseguid el color objetivo. Hay que lograr tres colores.', en: 'Switch the red, green or blue spotlights (RGB) to make the target colour. Make three colours.' },
+    tip: { eu: 'Argia nahastean koloreak argitu egiten dira: hiruek batera zuria ematen dute.', es: 'Al mezclar luz, los colores se aclaran: los tres juntos dan blanco.', en: 'Mixing light makes colours brighter: all three together make white.' },
+    mount: mountColours },
+  { k: 'M', color: '#7c3aed', area: { eu: 'Matematika', es: 'Matemáticas', en: 'Maths' },
+    title: { eu: 'Giltzarrapoaren kodea', es: 'El código del candado', en: 'The padlock code' },
+    text: { eu: 'Lehen bi zifrak: segidaren hurrengo zenbakia. Azken bi zifrak: 1011 zenbaki bitarra, hamartarrean.', es: 'Dos primeras cifras: el siguiente número de la serie. Dos últimas cifras: el número binario 1011 en decimal.', en: 'First two digits: the next number in the sequence. Last two digits: the binary number 1011 in decimal.' },
+    tip: { eu: 'Fibonacci: zenbaki bakoitza aurreko bien batura da. Bitarra: 8 · 4 · 2 · 1', es: 'Fibonacci: cada número es la suma de los dos anteriores. Binario: 8 · 4 · 2 · 1', en: 'Fibonacci: each number is the sum of the two before. Binary: 8 · 4 · 2 · 1' },
+    mount: mountCode },
+  { k: '🤖', color: '#0f766e', area: { eu: 'Robotika', es: 'Robótica', en: 'Robotics' },
+    title: { eu: 'Programatu robota', es: 'Programa el robot', en: 'Program the robot' },
+    text: { eu: 'Sortu agindu-zerrenda bat robota bateriaraino eramateko, hormak ukitu gabe. Gero sakatu ▶.', es: 'Cread una lista de órdenes para llevar al robot hasta la batería sin tocar los muros. Después pulsad ▶.', en: 'Build a list of commands to take the robot to the battery without hitting any walls. Then press ▶.' },
+    tip: { eu: 'Gezi bakoitza = lauki bat. ⌫ azken agindua ezabatzen du.', es: 'Cada flecha = una casilla. ⌫ borra la última orden.', en: 'Each arrow = one square. ⌫ deletes the last command.' },
+    mount: mountRobot }
+];
+
+// ── S: planets ───────────────────────────────────────────
+function mountPlanets(el, api) {
+  let next = 0;
+  el.innerHTML = `<div class="orbit"><div class="sun"></div>${PLANETS.map((_, i) => `<div class="slot" data-i="${i}">${i + 1}</div>`).join('')}</div>
+    <div class="pool"></div><div class="msg"></div>`;
+  const pool = el.querySelector('.pool');
+  shuffle(PLANETS.map((p, i) => i)).forEach(i => {
+    const p = PLANETS[i], d = (5 + p.s * 6).toFixed(1) + 'vh';
+    const b = document.createElement('button');
+    b.className = 'planet' + (p.ring ? ' ring' : '');
+    b.innerHTML = `<i style="width:${d};height:${d};background:radial-gradient(circle at 35% 35%, #fff8, ${p.c} 45%)"></i><span></span>`;
+    b.lastChild.textContent = t(p.n);
+    b.onclick = () => {
+      if (i === next) {
+        const slot = el.querySelector(`.slot[data-i="${i}"]`);
+        const orb = b.firstChild; slot.textContent = ''; slot.classList.add('f'); slot.appendChild(orb); orb.style.width = orb.style.height = '8vh';
+        if (p.ring) slot.classList.add('planet', 'ring');
+        b.remove(); next++;
+        if (next === PLANETS.length) api.ok();
+      } else api.fail(el.querySelector('.msg'));
+    };
+    pool.appendChild(b);
+  });
+}
+
+// ── T: logic gates ───────────────────────────────────────
+function mountLogic(el, api) {
+  const v = { A: 0, B: 0, C: 0 };
+  const lamp = () => (v.A && !v.B) || (v.B && v.C) ? 1 : 0;
+  const alarm = () => v.A && v.C ? 1 : 0;
+  let shown = false;
+  const gate = (x, y, name) => `<g><rect x="${x}" y="${y}" width="110" height="64" rx="18" fill="#10213a"/>
+    <text x="${x + 55}" y="${y + 41}" text-anchor="middle" font-size="24" font-weight="800" fill="#fff">${t(GATE[name])}</text></g>`;
+  function draw() {
+    const on = c => c ? '#16a34a' : '#94a3b8';
+    const L1 = shown ? lamp() : null, A1 = shown ? alarm() : null;
+    el.querySelector('svg').innerHTML = `
+      <g fill="none" stroke="#64748b" stroke-width="5">
+        <path d="M150 80 H300 V112 H370"/><path d="M300 80 H350 V352 H520"/>
+        <path d="M150 210 H190"/><path d="M290 210 H330 V142 H370"/><path d="M150 210 H170 V242 H370"/>
+        <path d="M150 340 H300 V272 H370"/><path d="M300 340 V382 H520"/>
+        <path d="M480 127 H500 V182 H520"/><path d="M480 257 H500 V212 H520"/>
+        <path d="M630 197 H700"/><path d="M630 367 H700"/>
+      </g>
+      <g fill="#64748b"><circle cx="300" cy="80" r="7"/><circle cx="170" cy="210" r="7"/><circle cx="300" cy="340" r="7"/></g>
+      ${['A', 'B', 'C'].map((k, i) => `<g class="sw" data-k="${k}">
+        <rect x="20" y="${48 + i * 130}" width="130" height="64" rx="32" fill="${v[k] ? '#16a34a' : '#e2e8f0'}" stroke="#10213a" stroke-width="4"/>
+        <circle cx="${v[k] ? 118 : 52}" cy="${80 + i * 130}" r="24" fill="#fff" stroke="#10213a" stroke-width="3"/>
+        <text x="${v[k] ? 60 : 110}" y="${89 + i * 130}" text-anchor="middle" font-size="26" font-weight="800" fill="${v[k] ? '#fff' : '#10213a'}">${k}</text></g>`).join('')}
+      <g><path d="M190 186 L290 210 L190 234 Z" fill="#10213a"/><text x="222" y="218" font-size="18" font-weight="800" fill="#fff">${t(GATE.NOT)}</text></g>
+      ${gate(370, 95, 'AND')}${gate(370, 225, 'AND')}${gate(520, 165, 'OR')}${gate(520, 335, 'AND')}
+      <g><circle cx="745" cy="197" r="44" fill="${L1 === null ? '#f1f5f9' : L1 ? '#fde047' : '#cbd5e1'}" stroke="#10213a" stroke-width="5"/>
+        <text x="745" y="212" text-anchor="middle" font-size="40">💡</text></g>
+      <g><rect x="700" y="327" width="90" height="80" rx="16" fill="${A1 === null ? '#f1f5f9' : A1 ? '#ef4444' : '#cbd5e1'}" stroke="#10213a" stroke-width="5"/>
+        <text x="745" y="380" text-anchor="middle" font-size="40">🚨</text></g>`;
+    el.querySelectorAll('.sw').forEach(g => g.onclick = () => { v[g.dataset.k] ^= 1; shown = false; draw(); });
+  }
+  el.innerHTML = `<div class="svgbox"><svg viewBox="0 0 820 430"></svg></div><div class="msg"></div><button class="big">${t(L.check)}</button>`;
+  el.querySelector('.big').onclick = () => {
+    shown = true; draw();
+    if (lamp() && !alarm()) setTimeout(api.ok, 700); else api.fail(el.querySelector('.msg'));
+  };
+  draw();
+}
+
+// ── E: lever ─────────────────────────────────────────────
+function mountLever(el, api) {
+  const ROUNDS = [{ L: 6, dL: 2, R: 4, ans: 3 }, { L: 5, dL: 3, R: 3, ans: 5 }];
+  let r = 0, placed = null, busy = false;
+  const STEP = 70, CX = 450;
+  function draw(tilt = 0) {
+    const R = ROUNDS[r];
+    const xL = CX - R.dL * STEP, xR = placed ? CX + placed * STEP : null;
+    el.querySelector('svg').innerHTML = `
+      <polygon points="${CX},300 ${CX - 50},380 ${CX + 50},380" fill="#10213a"/>
+      <g transform="rotate(${tilt} ${CX} 290)">
+        <rect x="${CX - 5.5 * STEP}" y="280" width="${11 * STEP}" height="20" rx="8" fill="#ea580c"/>
+        ${[1, 2, 3, 4, 5].map(d => `<text x="${CX - d * STEP}" y="325" text-anchor="middle" font-size="20" fill="#64748b" font-weight="800">${d}</text>
+          <g class="pos" data-d="${d}" style="cursor:pointer"><circle cx="${CX + d * STEP}" cy="290" r="26" fill="${placed === d ? '#ea580c' : '#fff'}" stroke="#10213a" stroke-width="4"/>
+          <text x="${CX + d * STEP}" y="298" text-anchor="middle" font-size="22" font-weight="800" fill="#10213a">${d}</text></g>`).join('')}
+        <rect x="${xL - 38}" y="${280 - 70}" width="76" height="70" rx="10" fill="#10213a"/>
+        <text x="${xL}" y="${280 - 26}" text-anchor="middle" font-size="26" font-weight="800" fill="#fff">${R.L} kg</text>
+        ${xR ? `<rect x="${xR - 34}" y="${280 - 62}" width="68" height="62" rx="10" fill="#ea580c"/>
+        <text x="${xR}" y="${280 - 22}" text-anchor="middle" font-size="24" font-weight="800" fill="#fff">${R.R} kg</text>` : ''}
+      </g>
+      ${!placed ? `<g><rect x="${CX + 210}" y="40" width="80" height="72" rx="10" fill="#ea580c"/><text x="${CX + 250}" y="86" text-anchor="middle" font-size="26" font-weight="800" fill="#fff">${R.R} kg</text>
+        <text x="${CX + 250}" y="140" text-anchor="middle" font-size="40">⬇</text></g>` : ''}
+      <text x="40" y="60" font-size="26" font-weight="800" fill="#64748b">${r + 1} / 2</text>`;
+    el.querySelectorAll('.pos').forEach(g => g.onclick = () => choose(+g.dataset.d));
+  }
+  function choose(d) {
+    if (busy) return;
+    busy = true; placed = d;
+    const R = ROUNDS[r], diff = R.R * d - R.L * R.dL;
+    draw(0);
+    setTimeout(() => draw(diff === 0 ? 0 : diff > 0 ? 8 : -8), 60);
+    setTimeout(() => {
+      if (diff === 0) { r++; placed = null; busy = false; if (r === ROUNDS.length) api.ok(); else draw(0); }
+      else { api.fail(el.querySelector('.msg')); placed = null; busy = false; draw(0); }
+    }, 1100);
+  }
+  el.innerHTML = `<div class="svgbox"><svg viewBox="0 0 900 400"></svg></div><div class="msg"></div>`;
+  draw(0);
+}
+
+// ── A: colours of light ──────────────────────────────────
+function mountColours(el, api) {
+  const TARGETS = [[1, 1, 0], [1, 0, 1], [1, 1, 1]];
+  const NAMES = [{ eu: 'Gorria', es: 'Rojo', en: 'Red' }, { eu: 'Berdea', es: 'Verde', en: 'Green' }, { eu: 'Urdina', es: 'Azul', en: 'Blue' }];
+  const HEX = ['#ff0000', '#00ff00', '#0000ff'];
+  let k = 0, on = [0, 0, 0];
+  const css = c => `rgb(${c[0] * 255},${c[1] * 255},${c[2] * 255})`;
+  function draw() {
+    el.querySelector('.target i').style.background = css(TARGETS[k]);
+    el.querySelector('.target span').textContent = `${k + 1} / ${TARGETS.length}`;
+    el.querySelector('svg').innerHTML = `<rect width="300" height="300" rx="24" fill="#000"/>
+      <g style="isolation:isolate">${[[150, 115], [115, 175], [185, 175]].map(([x, y], i) =>
+        on[i] ? `<circle cx="${x}" cy="${y}" r="72" fill="${HEX[i]}" style="mix-blend-mode:screen"/>` : '').join('')}</g>`;
+    el.querySelectorAll('.lt').forEach((b, i) => b.classList.toggle('on', !!on[i]));
+  }
+  el.innerHTML = `<div class="mix"><div class="target"><i></i><span></span></div>
+      <svg viewBox="0 0 300 300" style="width:34vh;height:34vh"></svg></div>
+    <div class="lights">${NAMES.map((n, i) => `<button class="lt" style="background:${['#dc2626', '#16a34a', '#2563eb'][i]}">${t(n)}</button>`).join('')}</div>
+    <div class="msg"></div><button class="big">${t(L.check)}</button>`;
+  el.querySelectorAll('.lt').forEach((b, i) => b.onclick = () => { on[i] ^= 1; draw(); });
+  el.querySelector('.big').onclick = () => {
+    if (on.every((x, i) => x === TARGETS[k][i])) { k++; on = [0, 0, 0]; if (k === TARGETS.length) api.ok(); else draw(); }
+    else api.fail(el.querySelector('.msg'));
+  };
+  draw();
+}
+
+// ── M: padlock code ──────────────────────────────────────
+function mountCode(el, api) {
+  let code = '';
+  el.innerHTML = `<div class="clues">
+      <div class="clue"><small>1–2</small>1 · 1 · 2 · 3 · 5 · 8 · 13 · ?</div>
+      <div class="clue"><small>3–4</small>1011<sub>2</sub> = ?<sub>10</sub></div></div>
+    <div class="digits">${'<span></span>'.repeat(4)}</div>
+    <div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(n => `<button class="key" data-n="${n}">${n}</button>`).join('')}
+      <button class="key" data-n="del">⌫</button><button class="key go" data-n="ok">OK</button></div>
+    <div class="msg"></div>`;
+  const show = () => el.querySelectorAll('.digits span').forEach((s, i) => s.textContent = code[i] || '');
+  el.querySelectorAll('.key').forEach(b => b.onclick = () => {
+    const n = b.dataset.n;
+    if (n === 'del') code = code.slice(0, -1);
+    else if (n === 'ok') { if (code === '2111') return api.ok(); api.fail(el.querySelector('.msg')); code = ''; }
+    else if (code.length < 4) code += n;
+    show();
+  });
+  show();
+}
+
+// ── Robot ────────────────────────────────────────────────
+function mountRobot(el, api) {
+  const COLS = 6, ROWS = 4, START = [0, 3], GOAL = [5, 0];
+  const WALLS = ['0,1', '1,1', '1,2', '3,2', '3,3', '4,3', '5,2', '3,0', '5,1'];
+  const DIRS = { U: [0, -1, '⬆'], D: [0, 1, '⬇'], L: [-1, 0, '⬅'], R: [1, 0, '➡'] };
+  let prog = [], running = false;
+  el.innerHTML = `<div class="robo"><div class="grid">${Array.from({ length: COLS * ROWS }, (_, i) => {
+      const x = i % COLS, y = Math.floor(i / COLS);
+      return `<div class="cell">${WALLS.includes(x + ',' + y) ? '🧱' : x === GOAL[0] && y === GOAL[1] ? '🔋' : ''}</div>`; }).join('')}
+      <div class="bot">🤖</div></div>
+    <div class="cmds"><div class="pad"><span></span><button class="arrow" data-d="U">⬆</button><span></span>
+      <button class="arrow" data-d="L">⬅</button><button class="arrow" data-d="D">⬇</button><button class="arrow" data-d="R">➡</button></div>
+      <div style="display:flex;gap:10px"><button class="big light" data-a="del">⌫</button><button class="big" data-a="run">▶</button></div></div></div>
+    <div class="prog"></div><div class="msg"></div>`;
+  const grid = el.querySelector('.grid'), bot = el.querySelector('.bot');
+  function place(x, y) {
+    const c = grid.children[y * COLS + x];
+    bot.style.left = c.offsetLeft + 'px'; bot.style.top = c.offsetTop + 'px';
+  }
+  const showProg = (hi = -1) => el.querySelector('.prog').innerHTML = prog.map((d, i) => `<span class="${i === hi ? 'run' : ''}">${DIRS[d][2]}</span>`).join('');
+  el.querySelectorAll('.arrow').forEach(b => b.onclick = () => { if (!running && prog.length < 14) { prog.push(b.dataset.d); showProg(); } });
+  el.querySelector('[data-a=del]').onclick = () => { if (!running) { prog.pop(); showProg(); } };
+  el.querySelector('[data-a=run]').onclick = () => {
+    if (running || !prog.length) return;
+    running = true;
+    let [x, y] = START, i = 0;
+    place(x, y);
+    const step = () => {
+      if (i >= prog.length) {
+        running = false;
+        if (x === GOAL[0] && y === GOAL[1]) return api.ok();
+        api.fail(el.querySelector('.msg')); setTimeout(() => place(...START), 500); showProg(); return;
+      }
+      const [dx, dy] = DIRS[prog[i]];
+      const nx = x + dx, ny = y + dy;
+      showProg(i);
+      if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS || WALLS.includes(nx + ',' + ny)) {
+        running = false; bot.textContent = '💥';
+        api.fail(el.querySelector('.msg'));
+        setTimeout(() => { bot.textContent = '🤖'; place(...START); showProg(); }, 900);
+        return;
+      }
+      x = nx; y = ny; place(x, y); i++;
+      if (x === GOAL[0] && y === GOAL[1]) { running = false; showProg(); return setTimeout(api.ok, 400); }
+      setTimeout(step, 380);
+    };
+    setTimeout(step, 200);
+  };
+  requestAnimationFrame(() => place(...START));
+  addEventListener('resize', () => place(...START));
+  showProg();
+}
+
+// ============================================================
+//  GAME FLOW
+// ============================================================
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+let team = '', group = '', si = 0, wrong = 0, elapsed = 0, last = 0, running = false, raf = 0;
+
+function tick(now) {
+  if (running) elapsed += (now - last) / 1000;
+  last = now;
+  document.getElementById('clock').textContent = DB.fmt(elapsed + wrong * PEN);
+  raf = requestAnimationFrame(tick);
+}
+
+const api = {
+  ok() {
+    if (!running) return;
+    running = false;
+    const f = document.createElement('div'); f.className = 'flash'; f.textContent = '✓';
+    document.getElementById('stage').appendChild(f);
+    setTimeout(() => { si++; if (si >= STATIONS.length) finish(); else { showStation(); last = performance.now(); running = true; } }, 1100);
+  },
+  fail(msgEl) {
+    wrong++;
+    document.getElementById('pen').textContent = '+' + wrong * PEN + ' s';
+    const st = document.getElementById('stage');
+    st.classList.remove('shake'); void st.offsetWidth; st.classList.add('shake');
+    if (msgEl) { msgEl.textContent = t(L.wrongMsg); clearTimeout(msgEl._t); msgEl._t = setTimeout(() => msgEl.textContent = '', 1800); }
+  }
+};
+
+function showStation() {
+  const S = STATIONS[si];
+  document.documentElement.style.setProperty('--c', S.color);
+  document.getElementById('letter').textContent = S.k;
+  document.getElementById('area').textContent = t(S.area);
+  document.getElementById('sTitleSt').textContent = t(S.title);
+  document.getElementById('sText').textContent = t(S.text);
+  document.getElementById('sTip').textContent = (S.tip ? t(S.tip) + ' · ' : '') + t(L.tip);
+  document.getElementById('dots').innerHTML = STATIONS.map((s, i) =>
+    `<span class="dot ${i < si ? 'done' : i === si ? 'on' : ''}" style="--dc:${s.color}">${s.k}</span>`).join('');
+  const stage = document.getElementById('stage');
+  stage.innerHTML = '';
+  S.mount(stage, api);
+}
+
+function start(id, grp) {
+  team = id; group = grp || ''; si = 0; wrong = 0; elapsed = 0;
+  const chip = document.getElementById('teamChip');
+  chip.textContent = id; chip.style.background = DB.COLORS.L;
+  document.getElementById('pen').textContent = '';
+  document.getElementById('start').classList.add('hidden');
+  document.getElementById('end').classList.add('hidden');
+  showStation();
+  last = performance.now(); running = true;
+  cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+}
+
+function finish() {
+  running = false; cancelAnimationFrame(raf);
+  const time = Math.round(elapsed), pen = wrong * PEN, total = time + pen;
+  document.getElementById('clock').textContent = DB.fmt(total);
+  document.getElementById('eTitle').textContent = t(L.end) + ' — ' + team;
+  document.getElementById('vTime').textContent = DB.fmt(time);
+  document.getElementById('vWrong').textContent = wrong;
+  document.getElementById('vPen').textContent = '+' + pen + ' s';
+  document.getElementById('vTotal').textContent = DB.fmt(total);
+  const rec = { game: 'steam', teamName: team, group, time, wrong, penalty: pen, total, correct: STATIONS.length };
+  const where = DB.saveResult(rec);
+  document.getElementById('vPts').textContent = '+' + rec.points;
+  document.getElementById('saved').textContent = t(where === 'sheet' ? DB.S.saved : DB.S.savedLocal);
+  document.getElementById('end').classList.remove('hidden');
+}
+
+function applyTexts() {
+  document.documentElement.lang = DB.lang;
+  document.getElementById('title').textContent = t(L.title);
+  document.getElementById('oTitle').textContent = t(L.title);
+  document.getElementById('oLead').textContent = t(L.lead);
+  document.getElementById('oLetters').innerHTML = STATIONS.map(s => `<span style="background:${s.color}">${s.k} · ${t(s.area)}</span>`).join('');
+  document.getElementById('oHub').textContent = t(DB.S.back);
+  document.getElementById('eHub').textContent = t(DB.S.toHub);
+  document.getElementById('other').textContent = t(DB.S.otherTeam);
+  ['Time', 'Wrong', 'Pen', 'Total', 'Pts'].forEach(k => document.getElementById('l' + k).textContent = t(DB.S[{ Time: 'time', Wrong: 'wrong', Pen: 'penalty', Total: 'total', Pts: 'points' }[k]]));
+  DB.nameForm(document.getElementById('teams'), { count: 1 }, (n, gr) => start(n[0], gr[0]));
+}
+document.getElementById('other').onclick = () => {   // next team: type its name
+  document.getElementById('end').classList.add('hidden');
+  document.getElementById('start').classList.remove('hidden');
+  DB.nameForm(document.getElementById('teams'), { count: 1 }, (n, gr) => start(n[0], gr[0]));
+};
+applyTexts();
+showStation();
+</script>
+</body>
+</html>

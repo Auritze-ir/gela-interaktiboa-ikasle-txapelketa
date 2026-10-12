@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="eu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balioak 4.0 dueloa · Duelo Valores 4.0 · Values 4.0 duel</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f6f5f2; --paper: #fff; --ink: #1c1917; --muted: #57534e; --line: #e7e5e4;
+          --ok: #15803d; --ok-bg: #ecfdf3; --bad: #b91c1c; --bad-bg: #fef2f2;
+          --vc: #9333ea; --L: #5b3cc4; --R: #0b9a6d; --Ls: #ece7fb; --Rs: #e2f5ed; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { font-family: 'Space Grotesk', system-ui, sans-serif; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  button { font-family: inherit; cursor: pointer; }
+  button:focus-visible { outline: 4px solid #f59e0b; outline-offset: 3px; }
+  .hidden { display: none !important; }
+
+  .bar { flex: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; padding: 12px 22px; background: var(--paper); border-bottom: 1px solid var(--line); }
+  .bar h1 { font-family: 'Playfair Display', serif; font-size: 1.6rem; }
+  .mid { display: flex; align-items: center; gap: 12px; }
+  .value { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; background: var(--vc); color: #fff; font-weight: 700; font-size: 1.05rem; }
+  .qn { font-weight: 700; color: var(--muted); font-size: 1.05rem; white-space: nowrap; }
+  .score { justify-self: end; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+  .score span { color: #fff; border-radius: 12px; padding: 2px 14px; min-width: 2em; text-align: center; }
+  .track { height: 4px; background: var(--line); flex: none; } .track div { height: 100%; background: var(--vc); width: 0; transition: width 0.4s; }
+
+  .arena { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; position: relative; }
+  .side { display: flex; flex-direction: column; gap: 1.6vh; padding: 2vh 1.8vw 2vh; min-height: 0; background: var(--soft); }
+  .side.L { --c: var(--L); --soft: var(--Ls); border-right: 3px solid var(--ink); }
+  .side.R { --c: var(--R); --soft: var(--Rs); }
+  .s-head { display: flex; align-items: center; justify-content: space-between; }
+  .s-name { font-weight: 700; font-size: clamp(1.1rem, 1.8vw, 1.8rem); color: var(--c); }
+  .s-state { font-weight: 700; font-size: 1rem; color: var(--muted); }
+  .q { background: var(--paper); border-radius: 16px; padding: 2vh 1.4vw; border-top: 6px solid var(--vc); font-size: clamp(1.05rem, 1.75vw, 1.85rem); line-height: 1.4; font-weight: 500; }
+  .opts { display: grid; gap: 1.1vh; flex: 1; min-height: 0; grid-auto-rows: 1fr; }
+  .opt { border: 3px solid var(--line); background: var(--paper); border-radius: 14px; padding: 1vh 1vw; text-align: left; display: flex; align-items: center; gap: 0.9vw;
+         font-size: clamp(0.9rem, 1.32vw, 1.4rem); line-height: 1.3; color: var(--ink); }
+  .opt .k { flex: none; width: 2.1em; height: 2.1em; border-radius: 10px; background: var(--line); display: grid; place-items: center; font-weight: 700; }
+  .opt.sel { border-color: var(--c); box-shadow: 0 0 0 3px var(--c) inset; }
+  .opt.sel .k { background: var(--c); color: #fff; }
+  .side.locked .opt { opacity: 0.55; pointer-events: none; }
+  .side.locked .opt.sel { opacity: 0.55; box-shadow: none; border-color: var(--line); }
+  .side.locked .opt.sel .k { background: var(--line); color: var(--ink); }
+  .opt.ok { border-color: var(--ok) !important; background: var(--ok-bg) !important; opacity: 1 !important; }
+  .opt.ok .k { background: var(--ok) !important; color: #fff !important; }
+  .opt.bad { border-color: var(--bad) !important; background: var(--bad-bg) !important; opacity: 1 !important; }
+  .opt.bad .k { background: var(--bad) !important; color: #fff !important; }
+  .confirm { border: none; border-radius: 14px; background: var(--c); color: #fff; font-weight: 700; font-size: clamp(1rem, 1.4vw, 1.4rem); padding: 1.4vh; }
+  .confirm:disabled { opacity: 0.35; cursor: default; }
+  .result { border-radius: 14px; padding: 1.4vh 1vw; font-weight: 700; font-size: clamp(1rem, 1.4vw, 1.4rem); text-align: center; }
+  .result.ok { background: var(--ok); color: #fff; } .result.bad { background: var(--bad); color: #fff; }
+  .result.wait { background: var(--paper); color: var(--muted); border: 2px dashed var(--line); }
+
+  .arena.revealed .side { padding-bottom: calc(2vh + 120px); }
+  .explain { position: absolute; left: 50%; bottom: 2vh; transform: translateX(-50%); width: min(980px, 92%); background: var(--ink); color: #fff; border-radius: 18px;
+             padding: 18px 22px; display: flex; gap: 18px; align-items: center; box-shadow: 0 18px 50px rgba(0,0,0,0.3); z-index: 4; }
+  .explain p { flex: 1; font-size: clamp(1rem, 1.35vw, 1.35rem); line-height: 1.45; }
+  .explain p b { color: #fbbf24; }
+  .next { border: none; border-radius: 12px; background: #fbbf24; color: var(--ink); font-weight: 700; font-size: 1.2rem; padding: 14px 22px; white-space: nowrap; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(28,25,23,0.82); display: grid; place-items: center; padding: 20px; z-index: 10; }
+  .panel { background: var(--paper); border-radius: 24px; padding: 34px 40px; width: min(780px, 100%); max-height: calc(100vh - 40px); overflow: auto; border-top: 12px solid var(--vc); }
+  .panel h2 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4.5vw, 3rem); line-height: 1.05; }
+  .panel .lead { font-size: 1.15rem; line-height: 1.6; margin-top: 14px; }
+  .panel ol { margin: 12px 0 0 22px; line-height: 1.6; color: var(--muted); }
+  .vals { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .vals span { color: #fff; padding: 7px 14px; border-radius: 999px; font-weight: 700; }
+  .row { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-top: 18px; }
+  .row label { display: block; color: var(--muted); font-weight: 500; margin-bottom: 6px; }
+  select { font: 700 1.1rem 'Space Grotesk', sans-serif; padding: 10px 14px; border-radius: 12px; border: 2px solid var(--line); }
+  .who { font-weight: 700; margin-top: 18px; }
+  .btns { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+  .btn { border: none; border-radius: 999px; background: var(--ink); color: #fff; font-weight: 700; font-size: 1.2rem; padding: 14px 32px; text-decoration: none; }
+  .btn.light { background: #e7e5e4; color: var(--ink); }
+  .final { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
+  .fin { border-radius: 16px; padding: 16px 18px; color: #fff; }
+  .fin b { display: block; font-size: 1.2rem; } .fin span { font-size: 2.2rem; font-weight: 700; } .fin small { display: block; font-size: 1rem; opacity: 0.9; }
+  .saved { color: var(--ok); font-weight: 700; margin-top: 12px; }
+
+  @media (max-width: 800px) { body { overflow: auto; } .arena { grid-template-columns: 1fr; } .side.L { border-right: none; border-bottom: 3px solid var(--ink); }
+    .bar { grid-template-columns: 1fr; } .score { justify-self: start; } .explain { position: static; transform: none; width: auto; margin: 10px; flex-direction: column; } }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <h1 id="title"></h1>
+  <div class="mid"><span class="qn" id="qn"></span><span class="value" id="value"></span></div>
+  <div class="score"><span id="scL"></span><span id="scR"></span></div>
+</header>
+<div class="track"><div id="track"></div></div>
+
+<main class="arena">
+  <section class="side L" id="sideL">
+    <div class="s-head"><span class="s-name" id="nmL"></span><span class="s-state" id="stL"></span></div>
+    <div class="q" id="qL"></div>
+    <div class="opts" id="opL"></div>
+    <button class="confirm" id="cfL" disabled></button>
+    <div class="result hidden" id="rsL"></div>
+  </section>
+  <section class="side R" id="sideR">
+    <div class="s-head"><span class="s-name" id="nmR"></span><span class="s-state" id="stR"></span></div>
+    <div class="q" id="qR"></div>
+    <div class="opts" id="opR"></div>
+    <button class="confirm" id="cfR" disabled></button>
+    <div class="result hidden" id="rsR"></div>
+  </section>
+  <div class="explain hidden" id="explain"><p id="exText"></p><button class="next" id="next"></button></div>
+</main>
+
+<div class="overlay" id="setup">
+  <div class="panel">
+    <h2 id="sTitle"></h2>
+    <p class="lead" id="sLead"></p>
+    <ol id="sSteps"></ol>
+    <div class="vals" id="sVals"></div>
+    <div class="row"><div><label for="nq" id="nqLabel"></label>
+      <select id="nq"><option value="8">8</option><option value="12" selected>12</option><option value="16">16</option></select></div></div>
+    <div id="names"></div>
+    <div class="btns"><a class="btn light" id="sHub" href="../index.html"></a></div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="end">
+  <div class="panel">
+    <h2 id="eTitle"></h2>
+    <div class="final">
+      <div class="fin" id="fL"><b></b><span></span><small></small></div>
+      <div class="fin" id="fR"><b></b><span></span><small></small></div>
+    </div>
+    <p class="saved" id="saved"></p>
+    <div class="btns"><button class="btn" id="again"></button><a class="btn light" id="eHub" href="../index.html"></a></div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/common.js"></script>
+<script src="questions.js"></script>
+<script>
+const t = o => DB.t(o);
+const L = {
+  title: { eu: '🤝 Balioak 4.0 dueloa', es: '🤝 Duelo Valores 4.0', en: '🤝 Values 4.0 duel' },
+  lead: { eu: 'Bi taldeek galdera bera dute. Ez dago presarik: irakurri lasai, eztabaidatu taldean eta adostu erantzuna. Asmatze gehien dituen taldeak irabazten du.',
+          es: 'Los dos equipos tienen la misma pregunta. No hay prisa: leed con calma, hablad en equipo y poneos de acuerdo. Gana el equipo que más acierte.',
+          en: 'Both teams get the same question. There is no rush: read calmly, talk it over and agree on your answer. The team with the most correct answers wins.' },
+  steps: [
+    { eu: 'Aukeratu erantzun bat eta sakatu <b>Berretsi</b>.', es: 'Elegid una respuesta y pulsad <b>Confirmar</b>.', en: 'Choose an answer and press <b>Confirm</b>.' },
+    { eu: 'Bi taldeek berretsi arte ez da erantzun zuzena erakusten.', es: 'La respuesta correcta no se muestra hasta que confirman los dos equipos.', en: 'The right answer is only shown once both teams have confirmed.' },
+    { eu: 'Irakurri azalpena elkarrekin eta pasa hurrengo galderara.', es: 'Leed juntos la explicación y pasad a la siguiente pregunta.', en: 'Read the explanation together, then move on to the next question.' } ],
+  nq: { eu: 'Galdera kopurua', es: 'Número de preguntas', en: 'Number of questions' },
+  start: { eu: 'Hasi', es: 'Empezar', en: 'Start' },
+  confirm: { eu: 'Berretsi', es: 'Confirmar', en: 'Confirm' },
+  choose: { eu: 'Aukeratu erantzun bat', es: 'Elegid una respuesta', en: 'Choose an answer' },
+  waiting: { eu: '✓ Erantzuna emanda — itxaron beste taldeari…', es: '✓ Respuesta dada — esperad al otro equipo…', en: '✓ Answer locked — wait for the other team…' },
+  right: { eu: '✔ Zuzena! +1', es: '✔ ¡Correcto! +1', en: '✔ Correct! +1' },
+  wrongR: { eu: '✖ Ez da zuzena', es: '✖ No es correcta', en: '✖ Not correct' },
+  why: { eu: 'Zergatik?', es: '¿Por qué?', en: 'Why?' },
+  next: { eu: 'Hurrengo galdera ▸', es: 'Siguiente pregunta ▸', en: 'Next question ▸' },
+  last: { eu: 'Emaitzak ikusi ▸', es: 'Ver resultados ▸', en: 'See results ▸' },
+  q: { eu: 'Galdera', es: 'Pregunta', en: 'Question' },
+  wins: { eu: n => `${n} irabazle! 🏆`, es: n => `¡Gana ${n}! 🏆`, en: n => `${n} wins! 🏆` },
+  tie: { eu: 'Berdinketa! 🤝', es: '¡Empate! 🤝', en: 'It’s a draw! 🤝' },
+  again: { eu: 'Berriro jokatu', es: 'Jugar otra vez', en: 'Play again' },
+  correctOf: { eu: 'zuzen', es: 'aciertos', en: 'correct' }
+};
+
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const names = { L: '', R: '' }, groups = { L: '', R: '' };
+let list = [], qi = 0, order = [], sel = {}, conf = {}, score = {}, playing = false;
+
+function applyColors() {
+  const r = document.documentElement.style;
+  r.setProperty('--L', DB.COLORS.L); r.setProperty('--Ls', '#ece7fb');
+  r.setProperty('--R', DB.COLORS.R); r.setProperty('--Rs', '#ddf4ec');
+  document.getElementById('scL').style.background = DB.COLORS.L;
+  document.getElementById('scR').style.background = DB.COLORS.R;
+}
+
+function applyTexts() {
+  document.documentElement.lang = DB.lang;
+  document.getElementById('title').textContent = t(L.title);
+  document.getElementById('sTitle').textContent = t(L.title);
+  document.getElementById('sLead').textContent = t(L.lead);
+  document.getElementById('sSteps').innerHTML = L.steps.map(s => `<li>${t(s)}</li>`).join('');
+  document.getElementById('sVals').innerHTML = Object.values(VALUES).map(v => `<span style="background:${v.color}">${v.icon} ${t(v.name)}</span>`).join('');
+  document.getElementById('nqLabel').textContent = t(L.nq);
+  document.getElementById('again').textContent = t(L.again);
+  document.getElementById('sHub').textContent = t(DB.S.back);
+  document.getElementById('eHub').textContent = t(DB.S.toHub);
+  document.getElementById('next').textContent = t(L.next);
+  ['L', 'R'].forEach(s => document.getElementById('cf' + s).textContent = t(L.confirm));
+  renderNames();
+}
+
+/** Both team names are typed before every duel */
+function renderNames() {
+  const box = document.getElementById('names');
+  const typed = [...box.querySelectorAll('.db-field > input:not(.db-grp)')].map(i => i.value);
+  DB.nameForm(box, { count: 2, prefill: typed.length ? typed : [names.L, names.R] }, (n, g) => {
+    names.L = n[0]; names.R = n[1]; groups.L = g[0]; groups.R = g[1];
+    start();
+  });
+}
+
+/** Balanced pick: questions spread across the four values */
+function pickQuestions(n) {
+  const by = {};
+  shuffle(QUESTIONS).forEach(q => (by[q.v] = by[q.v] || []).push(q));
+  const keys = shuffle(Object.keys(by)), out = [];
+  while (out.length < n && keys.some(k => by[k].length)) keys.forEach(k => { if (out.length < n && by[k].length) out.push(by[k].pop()); });
+  return shuffle(out);
+}
+
+function start() {
+  list = pickQuestions(+document.getElementById('nq').value);
+  qi = 0; score = { L: 0, R: 0 }; playing = true;
+  document.getElementById('nmL').textContent = names.L;
+  document.getElementById('nmR').textContent = names.R;
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('end').classList.add('hidden');
+  render();
+}
+
+function render() {
+  const Q = list[qi], V = VALUES[Q.v];
+  sel = { L: null, R: null }; conf = { L: false, R: false };
+  order = shuffle([0, 1, 2, 3]);
+  document.documentElement.style.setProperty('--vc', V.color);
+  document.getElementById('value').textContent = V.icon + ' ' + t(V.name);
+  document.getElementById('qn').textContent = `${t(L.q)} ${qi + 1} / ${list.length}`;
+  document.getElementById('track').style.width = (qi / list.length * 100) + '%';
+  document.getElementById('scL').textContent = score.L;
+  document.getElementById('scR').textContent = score.R;
+  document.getElementById('explain').classList.add('hidden');
+  document.querySelector('.arena').classList.remove('revealed');
+  ['L', 'R'].forEach(s => {
+    document.getElementById('side' + s).classList.remove('locked');
+    document.getElementById('q' + s).textContent = t(Q.q);
+    document.getElementById('st' + s).textContent = t(L.choose);
+    const box = document.getElementById('op' + s);
+    box.innerHTML = '';
+    order.forEach((ai, k) => {
+      const b = document.createElement('button');
+      b.className = 'opt'; b.dataset.ai = ai;
+      b.innerHTML = `<span class="k">${'ABCD'[k]}</span><span></span>`;
+      b.lastChild.textContent = t(Q.a[ai]);
+      b.onclick = () => choose(s, ai);
+      box.appendChild(b);
+    });
+    const cf = document.getElementById('cf' + s);
+    cf.disabled = true; cf.classList.remove('hidden');
+    document.getElementById('rs' + s).className = 'result hidden';
+  });
+}
+
+function choose(s, ai) {
+  if (!playing || conf[s]) return;
+  sel[s] = ai;
+  document.querySelectorAll('#op' + s + ' .opt').forEach(b => b.classList.toggle('sel', +b.dataset.ai === ai));
+  document.getElementById('cf' + s).disabled = false;
+}
+
+function confirmSide(s) {
+  if (!playing || conf[s] || sel[s] === null) return;
+  conf[s] = true;
+  document.getElementById('side' + s).classList.add('locked');
+  document.getElementById('cf' + s).classList.add('hidden');
+  const rs = document.getElementById('rs' + s);
+  rs.className = 'result wait'; rs.textContent = t(L.waiting);
+  document.getElementById('st' + s).textContent = '';
+  if (conf.L && conf.R) setTimeout(reveal, 500);
+}
+
+function reveal() {
+  const Q = list[qi];
+  ['L', 'R'].forEach(s => {
+    const ok = sel[s] === 0;
+    if (ok) score[s]++;
+    document.querySelectorAll('#op' + s + ' .opt').forEach(b => {
+      const ai = +b.dataset.ai;
+      if (ai === 0) b.classList.add('ok');
+      else if (ai === sel[s]) b.classList.add('bad');
+    });
+    const rs = document.getElementById('rs' + s);
+    rs.className = 'result ' + (ok ? 'ok' : 'bad');
+    rs.textContent = t(ok ? L.right : L.wrongR);
+  });
+  document.getElementById('scL').textContent = score.L;
+  document.getElementById('scR').textContent = score.R;
+  document.getElementById('exText').innerHTML = `<b>${t(L.why)}</b> `;
+  document.getElementById('exText').append(t(Q.fb));
+  document.getElementById('next').textContent = t(qi === list.length - 1 ? L.last : L.next);
+  document.getElementById('explain').classList.remove('hidden');
+  document.querySelector('.arena').classList.add('revealed');
+}
+
+function next() {
+  qi++;
+  if (qi >= list.length) return finish();
+  render();
+}
+
+function finish() {
+  playing = false;
+  document.getElementById('track').style.width = '100%';
+  const w = score.L > score.R ? 'L' : score.R > score.L ? 'R' : null;
+  const name = s => names[s];
+  document.getElementById('eTitle').textContent = w ? t(L.wins)(name(w)) : t(L.tie);
+  let where = 'local';
+  ['L', 'R'].forEach(s => {
+    const rec = { game: 'balioak', teamName: name(s), group: groups[s], rival: name(s === 'L' ? 'R' : 'L'), correct: score[s], wrong: list.length - score[s],
+                  result: !w ? 'tie' : w === s ? 'win' : 'lose' };
+    where = DB.saveResult(rec);
+    const f = document.getElementById('f' + s);
+    f.style.background = DB.COLORS[s];
+    f.querySelector('b').textContent = name(s);
+    f.querySelector('span').textContent = `${score[s]} / ${list.length}`;
+    f.querySelector('small').textContent = `+${rec.points} ${t(DB.S.pts)}`;
+  });
+  document.getElementById('saved').textContent = t(where === 'sheet' ? DB.S.saved : DB.S.savedLocal);
+  document.getElementById('end').classList.remove('hidden');
+}
+
+document.getElementById('cfL').onclick = () => confirmSide('L');
+document.getElementById('cfR').onclick = () => confirmSide('R');
+document.getElementById('next').onclick = next;
+document.getElementById('again').onclick = () => { document.getElementById('end').classList.add('hidden'); document.getElementById('setup').classList.remove('hidden'); renderNames(); };
+
+applyColors();
+applyTexts();
+</script>
+</body>
+</html>

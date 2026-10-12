@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="eu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paretako bolak · Bolas en la pared · Wall balls</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0f1e30; --white: #f8fafc; --muted: #8bb8d4; --orange: #e8621a; --cyan: #00d4e8; --yellow: #ffd94a; --pink: #f472b6; --green: #4ade80; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--white); overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: none; }
+  button { font-family: inherit; cursor: pointer; }
+  button:focus-visible { outline: 4px solid var(--yellow); outline-offset: 3px; }
+  .hidden { display: none !important; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+  .hud { position: fixed; top: 0; left: 0; right: 0; height: 68px; display: flex; align-items: center; gap: 18px; padding: 0 22px;
+         background: rgba(15,30,48,0.88); border-bottom: 2px solid rgba(232,98,26,0.4); z-index: 5; pointer-events: none; }
+  .hud h1 { font-family: 'Fredoka One', cursive; font-size: 1.4rem; color: var(--orange); white-space: nowrap; }
+  .team { padding: 6px 16px; border-radius: 999px; font-weight: 900; white-space: nowrap; }
+  .round { color: var(--cyan); background: rgba(0,212,232,0.1); border: 1px solid rgba(0,212,232,0.35); padding: 5px 14px; border-radius: 999px; font-weight: 700; white-space: nowrap; }
+  .spacer { flex: 1; }
+  .goal { font-weight: 900; font-size: 1.25rem; color: var(--white); white-space: nowrap; }
+  .pen { color: #ff8a8a; font-weight: 900; font-size: 1.15rem; min-width: 64px; text-align: right; }
+  .clock { font-family: 'Fredoka One', cursive; font-size: 2rem; color: var(--yellow); min-width: 96px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(15,30,48,0.93); display: grid; place-items: center; padding: 20px; z-index: 10; }
+  .panel { text-align: center; width: min(760px, 100%); max-height: calc(100vh - 40px); overflow: auto; }
+  .panel .icon { font-size: 4rem; }
+  .panel h2 { font-family: 'Fredoka One', cursive; font-size: clamp(2.2rem, 5vw, 3.4rem); color: var(--orange); margin: 6px 0 10px; }
+  .panel p { font-size: 1.3rem; line-height: 1.55; }
+  .panel .sub { color: var(--muted); font-size: 1.05rem; margin-top: 8px; }
+  .panel .who { margin-top: 22px; font-weight: 900; font-size: 1.15rem; }
+  .db-teams { justify-content: center; }
+  .steps { display: flex; gap: 12px; justify-content: center; margin: 18px 0 4px; flex-wrap: wrap; }
+  .steps span { background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 999px; font-weight: 700; }
+  .btn { margin-top: 22px; border: none; border-radius: 999px; background: var(--orange); color: #fff; font-family: 'Fredoka One', cursive; font-size: 1.4rem; padding: 14px 44px; text-decoration: none; display: inline-block; }
+  .btn.light { background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.25); margin-left: 10px; font-size: 1.15rem; }
+  .count { font-family: 'Fredoka One', cursive; font-size: 5rem; color: var(--yellow); margin-top: 10px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 20px; }
+  .st { background: rgba(255,255,255,0.07); border-radius: 16px; padding: 14px; }
+  .st span { display: block; color: var(--muted); font-weight: 700; }
+  .st b { font-family: 'Fredoka One', cursive; font-size: 2.2rem; }
+  .st.total { background: var(--orange); } .st.total span { color: #ffe2d1; }
+  .st.pts { background: var(--yellow); color: #0f1e30; } .st.pts span { color: #5a4a00; }
+  .saved { color: var(--green); font-weight: 700; margin-top: 12px; }
+
+  @media (max-width: 700px) { .hud h1, .round { display: none; } .stats { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<canvas id="cv"></canvas>
+
+<header class="hud">
+  <h1 id="title"></h1>
+  <span class="team" id="teamChip"></span>
+  <span class="round" id="round"></span>
+  <span class="spacer"></span>
+  <span class="goal" id="goal"></span>
+  <span class="pen" id="pen"></span>
+  <span class="clock" id="clock">0:00</span>
+</header>
+
+<div class="overlay" id="start">
+  <div class="panel">
+    <div class="icon">🖐️</div>
+    <h2 id="sTitle"></h2>
+    <p id="sLead"></p>
+    <div class="steps" id="steps"></div>
+    <div id="teams"></div>
+    <a class="btn light" id="sHub" href="../index.html"></a>
+  </div>
+</div>
+
+<div class="overlay hidden" id="inter">
+  <div class="panel">
+    <div class="icon" id="iIcon"></div>
+    <h2 id="iTitle"></h2>
+    <p id="iText"></p>
+    <div class="count" id="iCount">3</div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="end">
+  <div class="panel">
+    <div class="icon">🏁</div>
+    <h2 id="eTitle"></h2>
+    <div class="stats">
+      <div class="st"><span id="lTime"></span><b id="vTime"></b></div>
+      <div class="st"><span id="lPen"></span><b id="vPen"></b></div>
+      <div class="st total"><span id="lTotal"></span><b id="vTotal"></b></div>
+      <div class="st pts"><span id="lPts"></span><b id="vPts"></b></div>
+    </div>
+    <p class="saved" id="saved"></p>
+    <button class="btn" id="other"></button><a class="btn light" id="eHub" href="../index.html"></a>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="../js/common.js"></script>
+<script>
+const PEN = 3;
+const L = {
+  title: { eu: '⚽ Paretako bolak', es: '⚽ Bolas en la pared', en: '⚽ Wall balls' },
+  lead: { eu: 'Hiru proba jarraian. Erlojua ez da gelditzen proba batetik bestera (azalpenetan bai). Akats bakoitzak 3 segundo gehitzen ditu. Denbora gutxien behar duen taldeak irabazten du!',
+          es: 'Tres pruebas seguidas. El reloj no se para entre pruebas (solo durante las explicaciones). Cada fallo suma 3 segundos. ¡Gana el equipo que menos tiempo necesite!',
+          en: 'Three rounds in a row. The clock only stops during the instructions. Every mistake adds 3 seconds. The team with the lowest time wins!' },
+  round: { eu: 'Proba', es: 'Prueba', en: 'Round' },
+  end: { eu: 'Hiru probak gaindituta!', es: '¡Tres pruebas superadas!', en: 'All three rounds done!' }
+};
+const ROUNDS = [
+  { id: 'tap', icon: '👆', goal: 15,
+    name: { eu: 'Lehertu bolak', es: 'Explota las bolas', en: 'Pop the balls' },
+    text: { eu: 'Ukitu bolak pantailatik atera aurretik. 15 lehertu behar dituzue. Ihes egiten duen bola bakoitzak +3 s.', es: 'Tocad las bolas antes de que salgan de la pantalla. Hay que explotar 15. Cada bola que escapa: +3 s.', en: 'Touch the balls before they leave the screen. Pop 15. Every ball that escapes: +3 s.' } },
+  { id: 'drag', icon: '✋', goal: 8,
+    name: { eu: 'Arrastatu koloreak', es: 'Arrastra los colores', en: 'Drag the colours' },
+    text: { eu: 'Eraman bola bakoitza bere koloreko zirkulura. 8 asmatu behar dituzue. Hainbat pertsonak batera arrasta dezakete!', es: 'Llevad cada bola al círculo de su color. Hay que acertar 8. ¡Podéis arrastrar varias personas a la vez!', en: 'Drag each ball into the circle of its colour. Get 8 right. Several people can drag at the same time!' } },
+  { id: 'freeze', icon: '⚽', goal: 6,
+    name: { eu: 'Geldirik dagoenean', es: 'Cuando se pare', en: 'When it stops' },
+    text: { eu: 'Baloia mugitzen da eta gero gelditu egiten da. Ukitu geldirik dagoenean! Mugitzen ari dela ukitzeak edo ihes egiten uzteak +3 s.', es: 'El balón se mueve y luego se para. ¡Tocadlo cuando esté quieto! Tocarlo en movimiento o dejar que se escape: +3 s.', en: 'The ball moves and then stops. Touch it while it is still! Touching it while it moves, or letting it escape: +3 s.' } }
+];
+const t = o => DB.t(o);
+
+// ── Canvas ───────────────────────────────────────────────
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+let W, H;
+function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+const TOP = 80;
+
+// ── State ────────────────────────────────────────────────
+let team = '', group = '', ri = 0, elapsed = 0, penalty = 0, running = false, last = 0, raf = 0, st = {};
+const fx = [], texts = [];
+const COLS = ['#00d4e8', '#e8621a', '#ffd94a', '#4ade80', '#f472b6', '#c084fc'];
+
+function addPen(x, y) { penalty += PEN; texts.push({ x, y, s: '+' + PEN + ' s', c: '#ff6b6b', life: 1 }); }
+function burst(x, y, c) { for (let i = 0; i < 14; i++) { const a = Math.random() * 6.28, v = 2 + Math.random() * 5; fx.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, c, life: 1 }); } }
+function ball(x, y, r, c, glow) {
+  ctx.save();
+  const g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 2, x, y, r);
+  g.addColorStop(0, 'rgba(255,255,255,0.85)'); g.addColorStop(0.35, c); g.addColorStop(1, c + '88');
+  ctx.beginPath(); ctx.arc(x, y, r, 0, 6.28); ctx.fillStyle = g; ctx.shadowColor = c; ctx.shadowBlur = glow || 18; ctx.fill();
+  ctx.restore();
+}
+
+// ── Round: TAP ───────────────────────────────────────────
+const TAP = {
+  init() { st = { balls: [], done: 0, next: 0, every: 1100 }; },
+  spawn() {
+    const r = 30 + Math.random() * 26, e = Math.floor(Math.random() * 4), sp = 2.6 + Math.min(st.done * 0.12, 3);
+    let x, y, vx, vy;
+    if (e === 0) { x = Math.random() * W; y = TOP - r; vx = (Math.random() - 0.5) * sp; vy = sp; }
+    else if (e === 1) { x = W + r; y = TOP + Math.random() * (H - TOP); vx = -sp; vy = (Math.random() - 0.5) * sp; }
+    else if (e === 2) { x = Math.random() * W; y = H + r; vx = (Math.random() - 0.5) * sp; vy = -sp; }
+    else { x = -r; y = TOP + Math.random() * (H - TOP); vx = sp; vy = (Math.random() - 0.5) * sp; }
+    st.balls.push({ x, y, vx, vy, r, c: COLS[Math.floor(Math.random() * COLS.length)], w: Math.random() * 6 });
+  },
+  update(now) {
+    if (now > st.next) { this.spawn(); st.next = now + st.every; st.every = Math.max(650, st.every - 25); }
+    for (let i = st.balls.length - 1; i >= 0; i--) {
+      const b = st.balls[i]; b.x += b.vx; b.y += b.vy; b.w += 0.08;
+      if (b.x < -b.r * 2 || b.x > W + b.r * 2 || b.y < TOP - b.r * 2 || b.y > H + b.r * 2) {
+        st.balls.splice(i, 1); addPen(Math.min(Math.max(b.x, 60), W - 60), Math.min(Math.max(b.y, TOP + 40), H - 40));
+      }
+    }
+  },
+  draw() { st.balls.forEach(b => ball(b.x, b.y, b.r + Math.sin(b.w) * 3, b.c)); },
+  down(x, y) {
+    for (let i = st.balls.length - 1; i >= 0; i--) {
+      const b = st.balls[i];
+      if (Math.hypot(x - b.x, y - b.y) < b.r + 14) { st.balls.splice(i, 1); burst(b.x, b.y, b.c); st.done++; return; }
+    }
+  },
+  progress() { return st.done; }
+};
+
+// ── Round: DRAG (multi-touch) ────────────────────────────
+const DCOLS = ['#00d4e8', '#e8621a', '#4ade80', '#f472b6'];
+const DRAG = {
+  init() {
+    st = { zones: [], balls: [], done: 0, held: new Map() };
+    DCOLS.forEach((c, i) => st.zones.push({ x: W * (0.14 + i * 0.24), y: H - 120, r: 70, c, n: 0 }));
+    for (let i = 0; i < 7; i++) this.spawn();
+  },
+  spawn() {
+    st.balls.push({ x: W * 0.1 + Math.random() * W * 0.8, y: TOP + 50 + Math.random() * (H * 0.45), r: 36, c: DCOLS[Math.floor(Math.random() * 4)] });
+  },
+  update() {},
+  draw() {
+    st.zones.forEach(z => {
+      ctx.save(); ctx.beginPath(); ctx.arc(z.x, z.y, z.r, 0, 6.28);
+      ctx.fillStyle = z.c + '30'; ctx.strokeStyle = z.c; ctx.lineWidth = 5; ctx.setLineDash([12, 8]); ctx.fill(); ctx.stroke(); ctx.restore();
+    });
+    st.balls.forEach(b => ball(b.x, b.y, b.r, b.c, [...st.held.values()].includes(b) ? 36 : 14));
+  },
+  down(x, y, id) {
+    for (let i = st.balls.length - 1; i >= 0; i--) {
+      const b = st.balls[i];
+      if ([...st.held.values()].includes(b)) continue;
+      if (Math.hypot(x - b.x, y - b.y) < b.r + 16) { st.held.set(id, b); b.ox = x - b.x; b.oy = y - b.y; return; }
+    }
+  },
+  move(x, y, id) { const b = st.held.get(id); if (b) { b.x = x - b.ox; b.y = Math.max(TOP + b.r, y - b.oy); } },
+  up(x, y, id) {
+    const b = st.held.get(id); if (!b) return;
+    st.held.delete(id);
+    for (const z of st.zones) {
+      if (Math.hypot(b.x - z.x, b.y - z.y) < z.r) {
+        if (z.c === b.c) {
+          burst(z.x, z.y, z.c); st.done++; st.balls.splice(st.balls.indexOf(b), 1);
+          if (st.balls.length < 5) this.spawn();
+        } else { addPen(z.x, z.y - z.r - 10); b.y = z.y - z.r - b.r - 20; }
+        return;
+      }
+    }
+  },
+  progress() { return st.done; }
+};
+
+// ── Round: FREEZE ────────────────────────────────────────
+const FREEZE = {
+  init() { st = { b: null, done: 0 }; this.spawn(); },
+  spawn() {
+    const sp = 3 + Math.random() * 2.5, a = Math.random() * 6.28;
+    st.b = { x: W * (0.2 + Math.random() * 0.6), y: TOP + 60 + Math.random() * (H - TOP - 160), vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+             r: 48, phase: 'move', t0: performance.now(), move: 900 + Math.random() * 1400, stay: 1800, w: 0 };
+  },
+  update(now) {
+    const b = st.b; if (!b) return;
+    b.w += 0.1;
+    if (b.phase === 'move') {
+      b.x += b.vx; b.y += b.vy;
+      if (b.x < b.r || b.x > W - b.r) b.vx *= -1;
+      if (b.y < TOP + b.r || b.y > H - b.r) b.vy *= -1;
+      if (now - b.t0 > b.move) { b.phase = 'stop'; b.t0 = now; }
+    } else if (now - b.t0 > b.stay) { addPen(b.x, b.y - 70); this.spawn(); }
+  },
+  draw(now) {
+    const b = st.b; if (!b) return;
+    const stop = b.phase === 'stop';
+    if (stop) {
+      const p = 1 - (now - b.t0) / b.stay;
+      ctx.save(); ctx.beginPath(); ctx.arc(b.x, b.y, b.r + 16, -1.57, -1.57 + 6.28 * p);
+      ctx.strokeStyle = '#ffd94a'; ctx.lineWidth = 6; ctx.shadowColor = '#ffd94a'; ctx.shadowBlur = 16; ctx.stroke(); ctx.restore();
+    }
+    ctx.save(); ctx.font = `${b.r * 2}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (stop) { ctx.shadowColor = '#ffd94a'; ctx.shadowBlur = 30; }
+    ctx.fillText('⚽', b.x, b.y); ctx.restore();
+  },
+  down(x, y) {
+    const b = st.b; if (!b || Math.hypot(x - b.x, y - b.y) > b.r + 18) return;
+    if (b.phase === 'stop') { burst(b.x, b.y, '#ffd94a'); st.done++; if (st.done < ROUNDS[2].goal) this.spawn(); else st.b = null; }
+    else addPen(b.x, b.y - 70);
+  },
+  progress() { return st.done; }
+};
+const ENGINES = { tap: TAP, drag: DRAG, freeze: FREEZE };
+
+// ── Loop ─────────────────────────────────────────────────
+function bg() {
+  const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+  g.addColorStop(0, '#132233'); g.addColorStop(1, '#0a1520'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(255,255,255,0.025)'; ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+}
+function loop(now) {
+  if (running) elapsed += (now - last) / 1000;
+  last = now;
+  bg();
+  const R = ROUNDS[ri], E = ENGINES[R.id];
+  if (running) E.update(now);
+  E.draw(now);
+  for (let i = fx.length - 1; i >= 0; i--) { const p = fx[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 0.03; if (p.life <= 0) { fx.splice(i, 1); continue; }
+    ctx.globalAlpha = p.life; ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, 6.28); ctx.fill(); ctx.globalAlpha = 1; }
+  for (let i = texts.length - 1; i >= 0; i--) { const f = texts[i]; f.y -= 1.5; f.life -= 0.02; if (f.life <= 0) { texts.splice(i, 1); continue; }
+    ctx.save(); ctx.globalAlpha = f.life; ctx.font = "bold 34px 'Fredoka One', sans-serif"; ctx.textAlign = 'center'; ctx.fillStyle = f.c; ctx.fillText(f.s, f.x, f.y); ctx.restore(); }
+  hud();
+  if (running && E.progress() >= R.goal) roundDone();
+  raf = requestAnimationFrame(loop);
+}
+function hud() {
+  const R = ROUNDS[ri];
+  document.getElementById('round').textContent = `${t(L.round)} ${ri + 1}/3 · ${t(R.name)}`;
+  document.getElementById('goal').textContent = `${R.icon} ${Math.min(ENGINES[R.id].progress(), R.goal)} / ${R.goal}`;
+  document.getElementById('pen').textContent = penalty ? '+' + penalty + ' s' : '';
+  document.getElementById('clock').textContent = DB.fmt(elapsed + penalty);
+}
+
+// ── Input (pointer events → multi-touch) ─────────────────
+const pos = e => [e.clientX, e.clientY];
+cv.addEventListener('pointerdown', e => { if (!running) return; cv.setPointerCapture(e.pointerId); const E = ENGINES[ROUNDS[ri].id]; E.down(...pos(e), e.pointerId); });
+cv.addEventListener('pointermove', e => { if (!running) return; const E = ENGINES[ROUNDS[ri].id]; E.move && E.move(...pos(e), e.pointerId); });
+const up = e => { if (!running) return; const E = ENGINES[ROUNDS[ri].id]; E.up && E.up(...pos(e), e.pointerId); };
+cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+
+// ── Flow ─────────────────────────────────────────────────
+function applyTexts() {
+  document.documentElement.lang = DB.lang;
+  document.getElementById('title').textContent = t(L.title);
+  document.getElementById('sTitle').textContent = t(L.title);
+  document.getElementById('sLead').textContent = t(L.lead);
+  document.getElementById('steps').innerHTML = ROUNDS.map((r, i) => `<span>${i + 1}. ${r.icon} ${t(r.name)}</span>`).join('');
+  document.getElementById('sHub').textContent = t(DB.S.back);
+  document.getElementById('eHub').textContent = t(DB.S.toHub);
+  document.getElementById('other').textContent = t(DB.S.otherTeam);
+  document.getElementById('lTime').textContent = t(DB.S.time);
+  document.getElementById('lPen').textContent = t(DB.S.penalty);
+  document.getElementById('lTotal').textContent = t(DB.S.total);
+  document.getElementById('lPts').textContent = t(DB.S.points);
+  DB.nameForm(document.getElementById('teams'), { count: 1 }, (n, gr) => start(n[0], gr[0]));
+}
+function start(id, grp) {
+  team = id; group = grp || ''; ri = 0; elapsed = 0; penalty = 0; fx.length = 0; texts.length = 0;
+  const chip = document.getElementById('teamChip');
+  chip.textContent = id; chip.style.background = DB.COLORS.L;
+  document.getElementById('start').classList.add('hidden');
+  document.getElementById('end').classList.add('hidden');
+  intro();
+}
+function intro() {
+  running = false;
+  const R = ROUNDS[ri];
+  ENGINES[R.id].init();
+  document.getElementById('iIcon').textContent = R.icon;
+  document.getElementById('iTitle').textContent = `${ri + 1}. ${t(R.name)}`;
+  document.getElementById('iText').textContent = t(R.text);
+  const ov = document.getElementById('inter'), c = document.getElementById('iCount');
+  ov.classList.remove('hidden');
+  let n = 4; c.textContent = n;
+  const iv = setInterval(() => {
+    n--; c.textContent = n || '🚀';
+    if (n < 0) { clearInterval(iv); ov.classList.add('hidden'); ENGINES[R.id].init(); last = performance.now(); running = true; }
+  }, 1000);
+}
+function roundDone() {
+  running = false;
+  if (ri < ROUNDS.length - 1) setTimeout(() => { ri++; intro(); }, 600); else setTimeout(finish, 600);
+}
+function finish() {
+  const time = Math.round(elapsed), total = time + penalty;
+  document.getElementById('eTitle').textContent = t(L.end) + ' — ' + team;
+  document.getElementById('vTime').textContent = DB.fmt(time);
+  document.getElementById('vPen').textContent = '+' + penalty + ' s';
+  document.getElementById('vTotal').textContent = DB.fmt(total);
+  const rec = { game: 'bolak', teamName: team, group, time, wrong: penalty / PEN, penalty, total };
+  const where = DB.saveResult(rec);
+  document.getElementById('vPts').textContent = '+' + rec.points;
+  document.getElementById('saved').textContent = t(where === 'sheet' ? DB.S.saved : DB.S.savedLocal);
+  document.getElementById('end').classList.remove('hidden');
+}
+document.getElementById('other').onclick = () => {   // next team: type its name
+  document.getElementById('end').classList.add('hidden');
+  document.getElementById('start').classList.remove('hidden');
+  DB.nameForm(document.getElementById('teams'), { count: 1 }, (n, gr) => start(n[0], gr[0]));
+};
+
+applyTexts();
+TAP.init();
+raf = requestAnimationFrame(loop);
+</script>
+</body>
+</html>

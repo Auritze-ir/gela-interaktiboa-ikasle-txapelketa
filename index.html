@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="eu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Don Bosco Txapelketa · Torneo · Championship</title>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #1b1d33; --paper: #fff; --bg: #eef1f6; --muted: #6b7280; --gold: #ffc20e; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Lexend', system-ui, sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+  button, input { font-family: inherit; }
+  button { cursor: pointer; }
+  button:focus-visible, input:focus-visible, a:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
+  .hidden { display: none !important; }
+
+  header.top { background: var(--ink); color: #fff; padding: 24px 36px 20px; display: flex; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+  .school { color: var(--gold); font-weight: 600; font-size: 1.05rem; }
+  .top h1 { font-size: clamp(2rem, 4.4vw, 3.4rem); font-weight: 800; line-height: 1; letter-spacing: -0.02em; margin-top: 4px; }
+  .top .spacer { flex: 1; }
+  .langs { display: inline-flex; background: rgba(255,255,255,0.12); border-radius: 999px; padding: 5px; gap: 4px; }
+  .langs button { border: none; background: transparent; color: #fff; font-weight: 800; font-size: 1rem; padding: 9px 18px; border-radius: 999px; }
+  .langs button.on { background: var(--gold); color: var(--ink); }
+  .hbtn { border: 2px solid rgba(255,255,255,0.6); background: transparent; color: #fff; border-radius: 999px; padding: 9px 18px; font-weight: 600; font-size: 1rem; }
+  .hbtn.gold { background: var(--gold); border-color: var(--gold); color: var(--ink); font-weight: 800; }
+
+  /* Our team */
+  .mine { background: #5b3cc4; color: #fff; padding: 18px 36px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+  .mine .pts { font-size: clamp(2.2rem, 4.6vw, 3.6rem); font-weight: 800; background: rgba(255,255,255,0.18); border-radius: 18px; padding: 2px 20px; min-width: 2.6em; text-align: center; font-variant-numeric: tabular-nums; line-height: 1.25; }
+  .mine .pts small { display: block; font-size: 0.85rem; font-weight: 600; opacity: 0.85; line-height: 1.2; padding-bottom: 6px; }
+  .mine .name { font-size: clamp(1.4rem, 2.8vw, 2.2rem); font-weight: 800; line-height: 1.05; }
+  .mine .sub { font-weight: 600; opacity: 0.85; margin-top: 4px; }
+  .mine .place { margin-left: auto; text-align: center; font-weight: 800; font-size: clamp(1.6rem, 3vw, 2.4rem); line-height: 1; }
+  .mine .place small { display: block; font-size: 0.85rem; font-weight: 600; opacity: 0.85; margin-top: 4px; }
+  .mine button { border: 2px solid rgba(255,255,255,0.7); background: transparent; color: #fff; border-radius: 999px; padding: 9px 18px; font-weight: 700; font-size: 1rem; }
+  .mine.empty { background: #2c2f4f; }
+  .mine.empty p { flex: 1; min-width: 220px; font-weight: 600; font-size: 1.1rem; }
+  .mine.empty button { background: var(--gold); border-color: var(--gold); color: var(--ink); font-weight: 800; }
+
+  main { padding: 26px 36px 48px; }
+  h2 { font-size: 1.5rem; font-weight: 800; margin: 6px 0 16px; }
+  .games { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+  .game { background: var(--paper); border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 12px; border-top: 10px solid var(--c); }
+  .g-top { display: flex; align-items: center; gap: 10px; }
+  .g-num { width: 40px; height: 40px; border-radius: 50%; background: var(--c); color: #fff; font-weight: 800; font-size: 1.2rem; display: grid; place-items: center; flex: none; }
+  .g-icon { font-size: 1.8rem; margin-left: auto; }
+  .g-name { font-size: 1.2rem; font-weight: 800; line-height: 1.1; }
+  .g-desc { color: var(--muted); line-height: 1.45; font-size: 0.93rem; flex: 1; }
+  .chip { border-radius: 12px; padding: 8px 12px; font-size: 0.85rem; font-weight: 600; background: var(--bg); color: var(--muted); display: flex; align-items: baseline; gap: 8px; }
+  .chip b { font-size: 1.4rem; color: var(--ink); }
+  .chip.done { background: color-mix(in srgb, var(--c) 14%, #fff); color: var(--c); }
+  .chip.done b { color: var(--c); }
+  .play { text-decoration: none; text-align: center; background: var(--c); color: #fff; font-weight: 800; font-size: 1.1rem; padding: 13px; border-radius: 14px; }
+  .g-mode { font-size: 0.8rem; font-weight: 600; color: var(--c); }
+
+  .low { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 34px; align-items: start; }
+  .box { background: var(--paper); border-radius: 20px; padding: 20px 24px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; color: var(--muted); font-size: 0.85rem; font-weight: 600; padding: 6px 8px; border-bottom: 2px solid var(--bg); }
+  td { padding: 9px 8px; border-bottom: 1px solid var(--bg); font-size: 1rem; }
+  td.r { font-weight: 800; width: 44px; } td.p { font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; } th.p { text-align: right; }
+  td .gr { color: var(--muted); font-size: 0.85rem; }
+  tr.me td { background: #fff7d6; font-weight: 800; }
+  .steps li { margin: 8px 0 8px 22px; line-height: 1.45; color: var(--muted); }
+  .steps b { color: var(--ink); }
+  .rk-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .rk-head h2 { flex: 1; }
+  .x { border: none; background: var(--bg); border-radius: 999px; padding: 10px 18px; font-weight: 800; font-size: 1rem; color: var(--ink); }
+  #rank { margin-top: 8px; }
+  .note { color: var(--muted); line-height: 1.5; }
+  .rules li { margin: 6px 0 6px 18px; line-height: 1.45; color: var(--muted); }
+  .rules b { color: var(--ink); }
+
+  /* Overlays */
+  .overlay { position: fixed; inset: 0; background: rgba(27,29,51,0.88); display: grid; place-items: center; padding: 20px; z-index: 10; }
+  .panel { background: var(--paper); border-radius: 26px; padding: 34px 38px; width: min(760px, 100%); max-height: calc(100vh - 40px); overflow: auto; }
+  .panel h2 { font-size: clamp(1.8rem, 4vw, 2.5rem); margin: 0 0 6px; }
+  .bigl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
+  .bigl button { border: none; border-radius: 20px; background: var(--ink); color: #fff; padding: 26px 10px; font-weight: 800; font-size: 1.6rem; }
+  .bigl button small { display: block; font-size: 0.95rem; font-weight: 600; color: var(--gold); margin-top: 6px; }
+  .skip { margin-top: 14px; border: none; background: none; color: var(--muted); text-decoration: underline; font-size: 0.95rem; }
+  .hint { color: var(--muted); font-size: 0.9rem; margin-top: 8px; line-height: 1.4; }
+
+  @media (max-width: 1250px) { .games { grid-template-columns: repeat(3, 1fr); } .low { grid-template-columns: 1fr; } }
+  @media (max-width: 800px) { .games { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) {
+    header.top, main, .mine { padding-left: 16px; padding-right: 16px; }
+    .games, .bigl { grid-template-columns: 1fr; }
+    .panel { padding: 24px 20px; }
+    .mine .place { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="school">CIFP Don Bosco LHII</div>
+    <h1 data-t="title"></h1>
+  </div>
+  <span class="spacer"></span>
+  <div class="langs" role="group" aria-label="Hizkuntza / Idioma / Language">
+    <button data-lang="eu">EU</button><button data-lang="es">ES</button><button data-lang="en">EN</button>
+  </div>
+  <button class="hbtn gold" id="openRank" data-t="rankBtn"></button>
+</header>
+
+<section class="mine" id="mine" aria-live="polite"></section>
+
+<main>
+  <h2 data-t="gamesTitle"></h2>
+  <div class="games" id="games"></div>
+
+  <div class="low">
+    <section class="box">
+      <h2 data-t="howTitle"></h2>
+      <ol class="steps" id="how"></ol>
+    </section>
+    <section class="box">
+      <h2 data-t="rulesTitle"></h2>
+      <ul class="rules" id="rules"></ul>
+    </section>
+  </div>
+</main>
+
+<!-- Step 1: language -->
+<div class="overlay hidden" id="ovLang">
+  <div class="panel">
+    <h2>Hizkuntza · Idioma · Language</h2>
+    <div class="bigl">
+      <button data-pick="eu">EU<small>Euskara</small></button>
+      <button data-pick="es">ES<small>Castellano</small></button>
+      <button data-pick="en">EN<small>English</small></button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 2: our team -->
+<div class="overlay hidden" id="ovTeam">
+  <div class="panel">
+    <h2 data-t="teamTitle"></h2>
+    <p class="hint" data-t="teamLead"></p>
+    <div id="teamForm"></div>
+    <p class="hint" data-t="privacy"></p>
+    <button class="skip" id="skip" data-t="skip"></button>
+  </div>
+</div>
+
+<!-- School ranking -->
+<div class="overlay hidden" id="ovRank">
+  <div class="panel" style="width:min(900px,100%)">
+    <div class="rk-head"><h2 data-t="rankTitle"></h2><button class="x" id="closeRank" data-t="close"></button></div>
+    <div id="rank"></div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script>
+const UI = {
+  title:      { eu: 'Gela interaktiboko txapelketa', es: 'Torneo del aula interactiva', en: 'Interactive classroom championship' },
+  rankBtn:    { eu: '🏆 Sailkapena', es: '🏆 Clasificación', en: '🏆 Ranking' },
+  gamesTitle: { eu: 'Probak', es: 'Pruebas', en: 'Challenges' },
+  rankTitle:  { eu: 'Ikastetxeko sailkapena', es: 'Clasificación del centro', en: 'School ranking' },
+  close:      { eu: 'Itxi ✕', es: 'Cerrar ✕', en: 'Close ✕' },
+  rulesTitle: { eu: 'Nola lortzen dira puntuak?', es: '¿Cómo se consiguen los puntos?', en: 'How do you score points?' },
+  howTitle:   { eu: 'Nola funtzionatzen du?', es: '¿Cómo funciona?', en: 'How does it work?' },
+  teamTitle:  { eu: 'Zein da zuen taldea?', es: '¿Cuál es vuestro equipo?', en: 'Which is your team?' },
+  teamLead:   { eu: 'Idatzi zuen taldearen izena zuen puntuak eta sailkapeneko postua ikusteko. Paretan ere izen bera idatzi beharko duzue proba bakoitzaren aurretik.', es: 'Escribid el nombre de vuestro equipo para ver vuestros puntos y vuestro puesto. En la pared tendréis que escribir el mismo nombre antes de cada prueba.', en: 'Type your team name to see your points and your place in the ranking. On the wall you will type the same name before each challenge.' },
+  seeOurs:    { eu: 'Ikusi gure puntuak', es: 'Ver nuestros puntos', en: 'See our points' },
+  skip:       { eu: 'Talderik gabe jarraitu (paretako ordenagailua)', es: 'Seguir sin equipo (ordenador de la pared)', en: 'Continue without a team (wall computer)' },
+  privacy:    { eu: 'Erabili taldeentzako izenak, ez ikasleen izen-abizenak.', es: 'Usad nombres de equipo, no nombres y apellidos del alumnado.', en: 'Use team names, not students’ full names.' },
+  noTeam:     { eu: 'Sartu zuen taldearen izena zuen puntuak ikusteko.', es: 'Escribid el nombre de vuestro equipo para ver vuestros puntos.', en: 'Type your team name to see your points.' },
+  enterTeam:  { eu: 'Gure taldea', es: 'Nuestro equipo', en: 'Our team' },
+  change:     { eu: 'Taldea aldatu', es: 'Cambiar equipo', en: 'Change team' },
+  refresh:    { eu: '⟳ Eguneratu', es: '⟳ Actualizar', en: '⟳ Refresh' },
+  place:      { eu: 'postua', es: 'puesto', en: 'place' },
+  of:         { eu: n => `${n} taldetik`, es: n => `de ${n} equipos`, en: n => `of ${n} teams` },
+  played:     { eu: n => `${n}/5 proba jokatuta`, es: n => `${n}/5 pruebas jugadas`, en: n => `${n}/5 challenges played` },
+  notYet:     { eu: 'Oraindik ez duzue punturik. Jokatu lehen proba paretan!', es: 'Todavía no tenéis puntos. ¡Jugad la primera prueba en la pared!', en: 'No points yet. Play your first challenge on the wall!' },
+  notPlayed:  { eu: 'Jokatu gabe', es: 'Sin jugar', en: 'Not played' },
+  loading:    { eu: 'Kargatzen…', es: 'Cargando…', en: 'Loading…' },
+  play:   { eu: 'Jokatu', es: 'Jugar', en: 'Play' },
+  solo:   { eu: 'Talde bakoitza bere txandan', es: 'Cada equipo en su turno', en: 'One team at a time' },
+  duel:   { eu: 'Bi talde aurrez aurre', es: 'Dos equipos cara a cara', en: 'Two teams face to face' },
+  rankTeam: { eu: 'Taldea', es: 'Equipo', en: 'Team' },
+  rankGames: { eu: 'Probak', es: 'Pruebas', en: 'Challenges' },
+  rankEmpty: { eu: 'Oraindik ez dago emaitzarik.', es: 'Todavía no hay resultados.', en: 'No results yet.' },
+  rankOff:   { eu: 'Google Sheet-a ez dago konektatuta (ikus README): ordenagailu honetan jokatutako taldeak bakarrik ikusten dira.', es: 'La hoja de Google no está conectada (ver README): solo se ven los equipos que han jugado en este ordenador.', en: 'The Google Sheet is not connected (see README): only teams that played on this computer are shown.' },
+  rankFail:  { eu: 'Ezin izan da Sheet-eko sailkapena kargatu. Ordenagailu honetako emaitzak:', es: 'No se ha podido cargar la clasificación de la hoja. Resultados de este ordenador:', en: 'The ranking could not be loaded from the sheet. Results from this computer:' },
+  h1: { eu: 'Talde bakoitzak <b>izen bat</b> aukeratzen du eta beti izen bera erabiltzen du.', es: 'Cada equipo elige <b>un nombre</b> y usa siempre el mismo.', en: 'Each team chooses <b>a name</b> and always uses the same one.' },
+  h2: { eu: 'Paretan, proba bakoitzaren aurretik, <b>idatzi taldearen izena</b>. Bi taldeko probetan, bi taldeek idazten dute beren izena.', es: 'En la pared, antes de cada prueba, <b>escribid el nombre del equipo</b>. En las pruebas de dos equipos, cada equipo escribe el suyo.', en: 'On the wall, before each challenge, <b>type your team name</b>. In two-team challenges, both teams type their names.' },
+  h3: { eu: 'Puntuak <b>taldearen izenari</b> gehitzen zaizkio, edozein egunetan eta edozein gelatan jokatuta ere.', es: 'Los puntos se suman <b>al nombre del equipo</b>, se juegue el día que se juegue y en el aula que sea.', en: 'Points are added <b>to the team name</b>, whatever the day and wherever you play.' },
+  h4: { eu: 'Orri honetan ikus ditzakezue zuen puntuak; <b>🏆 Sailkapena</b> botoiak ikastetxe osoko sailkapena erakusten du.', es: 'En esta página veis vuestros puntos; el botón <b>🏆 Clasificación</b> muestra la clasificación de todo el centro.', en: 'This page shows your points; the <b>🏆 Ranking</b> button shows the whole school ranking.' },
+  r1: { eu: '<b>Proba bakoitzak gehienez 100 puntu</b> ematen ditu: 5 proba, 500 puntu.', es: '<b>Cada prueba da hasta 100 puntos</b>: 5 pruebas, 500 puntos.', en: '<b>Each challenge gives up to 100 points</b>: 5 challenges, 500 points.' },
+  r1b: { eu: '<b>Ezagutu Don Bosco</b> (1): erlojurik gabe; asmatze bakoitzak puntuak ematen ditu (14 zuzen = 100).', es: '<b>Conoce Don Bosco</b> (1): sin reloj; cada acierto da puntos (14 aciertos = 100).', en: '<b>Discover Don Bosco</b> (1): no clock; every correct answer scores (14 correct = 100).' },
+  r2: { eu: '<b>Denborako probak</b> (2, 4): zenbat eta azkarrago, orduan eta puntu gehiago — 100, 80, 60, 40 edo 20.', es: '<b>Pruebas de tiempo</b> (2, 4): cuanto más rápido, más puntos — 100, 80, 60, 40 o 20.', en: '<b>Timed challenges</b> (2, 4): the faster you are, the more points — 100, 80, 60, 40 or 20.' },
+  r3: { eu: '<b>Bi taldeko probak</b> (3, 5): irabazleak 100, berdinketan 70 bakoitzak, galtzaileak 40.', es: '<b>Pruebas de dos equipos</b> (3, 5): quien gana 100, empate 70 cada uno, quien pierde 40.', en: '<b>Two-team challenges</b> (3, 5): winner 100, draw 70 each, loser 40.' },
+  r4: { eu: 'Proba bat errepikatzen bada, <b>emaitzarik onena</b> zenbatzen da.', es: 'Si se repite una prueba, cuenta <b>el mejor resultado</b>.', en: 'If a challenge is replayed, <b>the best result</b> counts.' }
+};
+const GAMES = [
+  { id: 'ezagutu', icon: '🏫', color: '#f5a623', href: 'ezagutu/index.html', mode: 'solo',
+    desc: { eu: 'Zenbat dakizue ikastetxeaz? 14 galdera, erlojurik gabe: asmatze bakoitzak puntuak ematen ditu.', es: '¿Cuánto sabéis del centro? 14 preguntas, sin reloj: cada acierto da puntos.', en: 'How well do you know the school? 14 questions, no clock: every correct answer scores.' } },
+  { id: 'bolak', icon: '⚽', color: '#e8621a', href: 'bolak/index.html', mode: 'solo',
+    desc: { eu: 'Hiru minijoko jarraian paretan: lehertu, arrastatu eta une egokian ukitu.', es: 'Tres minijuegos seguidos en la pared: explotar, arrastrar y tocar en el momento justo.', en: 'Three wall mini-games in a row: pop, drag and tap at the right moment.' } },
+  { id: 'sokatira', icon: '🪢', color: '#5b3cc4', href: 'sokatira/index.html', mode: 'duel',
+    desc: { eu: 'Adimen artifizialari buruzko galderak, bi taldeak aldi berean. Soka zuen aldera!', es: 'Preguntas sobre inteligencia artificial, los dos equipos a la vez. ¡La cuerda a vuestro lado!', en: 'Questions about artificial intelligence, both teams at once. Pull the rope your way!' } },
+  { id: 'steam', icon: '🔬', color: '#0b7fb3', href: 'steam/index.html', mode: 'solo',
+    desc: { eu: 'Sei erronka jarraian: zientzia, teknologia, ingeniaritza, artea, matematika eta robotika.', es: 'Seis retos seguidos: ciencia, tecnología, ingeniería, arte, matemáticas y robótica.', en: 'Six challenges in a row: science, technology, engineering, art, maths and robotics.' } },
+  { id: 'balioak', icon: '🤝', color: '#9333ea', href: 'balioak/index.html', mode: 'duel',
+    desc: { eu: 'Balioak 4.0: galdera bera bi taldeentzat, lasai irakurri eta adostu. Asmatze gehien dituenak irabazten du.', es: 'Valores 4.0: la misma pregunta para los dos equipos, leed con calma y poneos de acuerdo. Gana quien más acierte.', en: 'Values 4.0: the same question for both teams; read calmly and agree. Most correct answers wins.' } }
+];
+const t = o => DB.t(o);
+let rank = null, rankSrc = '';   // all teams, from the Sheet (or this computer)
+
+function render() {
+  document.documentElement.lang = DB.lang;
+  document.querySelectorAll('[data-t]').forEach(n => n.textContent = t(UI[n.dataset.t]));
+  document.querySelectorAll('.langs button').forEach(b => b.classList.toggle('on', b.dataset.lang === DB.lang));
+  const me = DB.myTeam();
+  const idx = me && rank ? rank.findIndex(x => DB.key(x.team) === DB.key(me.name)) : -1;
+  const mine = idx >= 0 ? rank[idx] : null;
+
+  // Our team bar
+  const bar = document.getElementById('mine');
+  bar.className = 'mine' + (me ? '' : ' empty');
+  if (!me) {
+    bar.innerHTML = '<p></p><button id="enter"></button>';
+    bar.querySelector('p').textContent = t(UI.noTeam);
+    bar.querySelector('button').textContent = t(UI.enterTeam) + ' ▸';
+    bar.querySelector('button').onclick = openTeam;
+  } else {
+    bar.innerHTML = `<span class="pts"></span><div><div class="name"></div><div class="sub"></div></div>
+      <div class="place"></div><button id="refresh"></button><button id="change"></button>`;
+    bar.querySelector('.pts').innerHTML = (rank ? (mine ? mine.points : 0) : '…') + `<small>${t(DB.S.points)}</small>`;
+    bar.querySelector('.name').textContent = mine ? mine.team : me.name;
+    bar.querySelector('.sub').textContent = !rank ? t(UI.loading) : mine ? (mine.group ? mine.group + ' · ' : '') + t(UI.played)(mine.played) : t(UI.notYet);
+    const pl = bar.querySelector('.place');
+    if (mine) pl.innerHTML = `#${idx + 1}<small>${t(UI.place)} · ${t(UI.of)(rank.length)}</small>`; else pl.remove();
+    bar.querySelector('#refresh').textContent = t(UI.refresh);
+    bar.querySelector('#refresh').onclick = load;
+    bar.querySelector('#change').textContent = t(UI.change);
+    bar.querySelector('#change').onclick = openTeam;
+  }
+
+  // Games
+  const box = document.getElementById('games');
+  box.innerHTML = '';
+  GAMES.forEach((g, i) => {
+    const el = document.createElement('article');
+    el.className = 'game';
+    el.style.setProperty('--c', g.color);
+    el.innerHTML = `<div class="g-top"><span class="g-num">${i + 1}</span><span class="g-name"></span><span class="g-icon">${g.icon}</span></div>
+      <div class="g-mode"></div><p class="g-desc"></p><a class="play" href="${g.href}"></a>`;
+    el.querySelector('.g-name').textContent = t(DB.S.games[g.id]);
+    el.querySelector('.g-mode').textContent = t(UI[g.mode]);
+    el.querySelector('.g-desc').textContent = t(g.desc);
+    el.querySelector('.play').textContent = t(UI.play) + ' ▸';
+    if (me) {
+      const p = mine && mine.games ? mine.games[g.id] : undefined;
+      const c = document.createElement('div');
+      c.className = 'chip' + (p != null ? ' done' : '');
+      if (p != null) { c.innerHTML = '<b></b><span></span>'; c.firstChild.textContent = p; c.lastChild.textContent = t(DB.S.pts); }
+      else c.textContent = t(UI.notPlayed);
+      el.insertBefore(c, el.querySelector('.play'));
+    }
+    box.appendChild(el);
+  });
+
+  document.getElementById('how').innerHTML = ['h1', 'h2', 'h3', 'h4'].map(k => `<li>${t(UI[k])}</li>`).join('');
+  document.getElementById('rules').innerHTML = ['r1', 'r1b', 'r2', 'r3', 'r4'].map(k => `<li>${t(UI[k])}</li>`).join('');
+  renderRanking();
+}
+
+function renderRanking() {
+  const box = document.getElementById('rank');
+  if (!rank) { box.innerHTML = `<p class="note">${t(UI.loading)}</p>`; return; }
+  const note = rankSrc === 'local' ? UI.rankOff : rankSrc === 'fail' ? UI.rankFail : null;
+  let html = note ? `<p class="note">${t(note)}</p><br>` : '';
+  if (!rank.length) { box.innerHTML = html + `<p class="note">${t(UI.rankEmpty)}</p>`; return; }
+  const me = DB.myTeam(), myKey = me ? DB.key(me.name) : '';
+  html += `<table><thead><tr><th>#</th><th>${t(UI.rankTeam)}</th><th>${t(UI.rankGames)}</th><th class="p">${t(DB.S.points)}</th></tr></thead><tbody>` +
+    rank.map((r, i) => `<tr${DB.key(r.team) === myKey ? ' class="me"' : ''}><td class="r">${['🥇', '🥈', '🥉'][i] || i + 1}</td><td class="nm"></td><td>${r.played}/5</td><td class="p">${r.points}</td></tr>`).join('') + '</tbody></table>';
+  box.innerHTML = html;
+  box.querySelectorAll('td.nm').forEach((td, i) => {
+    td.textContent = rank[i].team + ' ';
+    const g = document.createElement('span'); g.className = 'gr'; g.textContent = rank[i].group || ''; td.appendChild(g);
+  });
+}
+
+function load() {
+  DB.ranking((list, src) => { rank = list || []; rankSrc = src; render(); });
+}
+
+// Language
+function setLang(l) { DB.lang = l; render(); }
+document.querySelectorAll('.langs button').forEach(b => b.onclick = () => setLang(b.dataset.lang));
+document.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => {
+  setLang(b.dataset.pick);
+  try { localStorage.setItem('db-lang-picked', '1'); } catch (e) {}
+  document.getElementById('ovLang').classList.add('hidden');
+  if (!DB.myTeam() && !skipped()) openTeam();
+});
+
+// Our team
+function openTeam() {
+  const me = DB.myTeam();
+  document.getElementById('ovTeam').classList.remove('hidden');
+  DB.nameForm(document.getElementById('teamForm'), { count: 1, prefill: [me ? me.name : ''], button: UI.seeOurs }, (n, g) => {
+    DB.setMyTeam({ name: n[0], group: g[0] }); skipped(false);
+    document.getElementById('ovTeam').classList.add('hidden');
+    render();
+  });
+}
+const skipped = v => { try { if (v === undefined) return !!localStorage.getItem('db-team-skip'); v ? localStorage.setItem('db-team-skip', '1') : localStorage.removeItem('db-team-skip'); } catch (e) { return false; } };
+document.getElementById('skip').onclick = () => { DB.setMyTeam(null); skipped(true); document.getElementById('ovTeam').classList.add('hidden'); render(); };
+
+// Ranking
+document.getElementById('openRank').onclick = () => { renderRanking(); document.getElementById('ovRank').classList.remove('hidden'); load(); };
+document.getElementById('closeRank').onclick = () => document.getElementById('ovRank').classList.add('hidden');
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('ovRank').classList.add('hidden'); });
+
+render();
+load();
+setInterval(load, 60000);                                                  // keep points up to date
+document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+let picked = false; try { picked = !!localStorage.getItem('db-lang-picked'); } catch (e) {}
+if (!picked) document.getElementById('ovLang').classList.remove('hidden');
+else if (!DB.myTeam() && !skipped()) openTeam();
+</script>
+</body>
+</html>
