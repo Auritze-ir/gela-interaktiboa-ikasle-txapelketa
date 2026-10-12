@@ -5,5 +5,5 @@
 //  If it is empty, results are only saved on this computer.
 // ============================================================
 window.DB_CONFIG = {
-  SCRIPT_URL: ''
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzcLlpnYz33z5iule73q0w8VjOSRvso09bCIaLfCkPST_3xXXVyWMAA7WcMW1AfJbzb-g/exec'
 };
